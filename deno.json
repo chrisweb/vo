@@ -1,0 +1,41 @@
+{
+    "tasks": {
+        "dev": "deno run -A --node-modules-dir npm:next dev --turbopack",
+        "build": "deno run -A --node-modules-dir npm:next build",
+        "start": "deno run -A --node-modules-dir npm:next start",
+        "lint": "deno lint"
+    },
+    "imports": {
+        "react": "npm:react",
+        "react-dom": "npm:react-dom",
+        "next": "npm:next",
+        "@react-three/fiber": "npm:@react-three/fiber",
+        "@react-three/drei": "npm:@react-three/drei",
+        "@/components/": "./components/"
+    },
+    "compilerOptions": {
+        "jsx": "react-jsx",
+        "jsxImportSource": "react"
+    },
+    "lint": {
+        "include": [
+            "app/",
+            "components/",
+            "public/"
+        ],
+        "rules": {
+            "tags": [
+                "recommended"
+            ]
+        }
+    },
+    "fmt": {
+        "include": [
+            "app/",
+            "components/"
+        ],
+        "indentWidth": 4,
+        "semiColons": false,
+        "lineWidth": 160
+    }
+}

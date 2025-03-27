@@ -38,7 +38,7 @@ const WorldScene: React.FC<IProps> = (props) => {
         //}
     }*/
 
-    const Fallback = () => {
+    const Fallback: React.FC = () => {
         return (<>Sorry, this 3D animation can not be displayed on your device</>)
     }
 

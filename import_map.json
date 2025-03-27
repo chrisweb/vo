@@ -1,0 +1,8 @@
+{
+    "imports": {
+      "react": "npm:react",
+      "react-dom": "npm:react-dom",
+      "next": "npm:next",
+      "@/": "./"
+    }
+  }
