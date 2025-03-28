@@ -2,8 +2,9 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
         experimental: {
-          clientInstrumentationHook: true,
+            //clientInstrumentationHook: false,
         },
+
 };
 
 export default nextConfig;
