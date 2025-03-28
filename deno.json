@@ -1,8 +1,8 @@
 {
     "tasks": {
-        "dev": "deno run -A --node-modules-dir npm:next dev --turbopack",
-        "build": "deno run -A --node-modules-dir npm:next build",
-        "start": "deno run -A --node-modules-dir npm:next start",
+        "dev": "deno run --node-modules-dir npm:next@canary dev --turbopack",
+        "build": "TODO",
+        "start": "TODO",
         "lint": "deno lint"
     },
     "imports": {
