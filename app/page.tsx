@@ -1,9 +1,9 @@
-import Canvas from '@/components/Canvas.tsx'
+import WorldScene from "@/components/WorldScene.tsx"
 
 export default function Home() {
     return (
         <>
-            <Canvas altText="adjust alt text here" />
+            <WorldScene altText="adjust alt text here" />
         </>
     )
 }
