@@ -1,0 +1,20 @@
+{
+  "editor.detectIndentation": false,
+  "editor.defaultFormatter": "denoland.vscode-deno",
+  "editor.formatOnSave": true,
+  "deno.enable": true,
+  "deno.lint": true,
+  "deno.importMap": "./import_map.json",
+  "[typescript]": {
+    "editor.defaultFormatter": "denoland.vscode-deno"
+  },
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "denoland.vscode-deno"
+  },
+  "[javascript]": {
+    "editor.defaultFormatter": "denoland.vscode-deno"
+  },
+  "[javascriptreact]": {
+    "editor.defaultFormatter": "denoland.vscode-deno"
+  }
+}
