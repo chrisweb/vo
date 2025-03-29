@@ -8,7 +8,58 @@ import Welcome from '../components/Welcome.astro';
 		title="Astro + React Demo" 
 		description="A starter project showing how to use Astro with React components for an optimal developer experience."
 	/>
+	
+	<div class="link-container">
+		<a href="/model-viewer" class="feature-link">
+			<span class="link-title">View 3D Duck Model</span>
+			<span class="link-description">Check out our React Three Fiber integration</span>
+		</a>
+		
+		<a href="/websocket-demo" class="feature-link">
+			<span class="link-title">WebSocket Chat Demo</span>
+			<span class="link-description">Try real-time communication with Deno WebSockets</span>
+		</a>
+	</div>
 </Layout>
 
 <style>
+	.link-container {
+		max-width: 600px;
+		margin: 2rem auto;
+		padding: 1rem;
+		text-align: center;
+		display: flex;
+		flex-direction: column;
+		gap: 1rem;
+	}
+	
+	.feature-link {
+		display: block;
+		padding: 1.5rem;
+		background-color: #f9f9f9;
+		border-radius: 8px;
+		text-decoration: none;
+		color: inherit;
+		transition: transform 0.2s, box-shadow 0.2s;
+		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+	}
+	
+	.feature-link:hover {
+		transform: translateY(-5px);
+		box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+	}
+	
+	.link-title {
+		display: block;
+		font-size: 1.4rem;
+		font-weight: bold;
+		margin-bottom: 0.5rem;
+		color: #4169e1;
+	}
+	
+	.link-description {
+		display: block;
+		font-size: 1rem;
+		color: #666;
+	}
 </style>
