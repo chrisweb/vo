@@ -2,14 +2,17 @@
 
 import { Suspense } from 'react'
 import { Canvas, type GLProps } from '@react-three/fiber'
-import { PerspectiveCamera, AdaptiveDpr, OrbitControls /*, SoftShadows, Loader, PerformanceMonitor, PerformanceMonitorApi, Hud, useDetectGPU, useProgress, StatsGl*/ } from '@react-three/drei'
+import {
+    AdaptiveDpr,
+    OrbitControls, /*, SoftShadows, Loader, PerformanceMonitor, PerformanceMonitorApi, Hud, useDetectGPU, useProgress, StatsGl*/
+    PerspectiveCamera,
+} from '@react-three/drei'
 
 interface IProps extends React.PropsWithChildren {
     altText: string
 }
 
 const WorldScene: React.FC<IProps> = (props) => {
-
     // uncomment if you want to see what useDetectGPU returns
     //const gpuInfo = useDetectGPU()
     //if (process.env.NODE_ENV === 'development') {
@@ -39,7 +42,7 @@ const WorldScene: React.FC<IProps> = (props) => {
     }*/
 
     const Fallback: React.FC = () => {
-        return (<>Sorry, this 3D animation can not be displayed on your device</>)
+        return <>Sorry, this 3D animation can not be displayed on your device</>
     }
 
     const glProps: GLProps = {
@@ -58,26 +61,25 @@ const WorldScene: React.FC<IProps> = (props) => {
                 // but will also reduce the quality of the image
                 dpr={[1, 1.5]} // Limit pixel ratio to improve performance
                 // https://docs.pmnd.rs/react-three-fiber/api/canvas#render-defaults
-                shadows="soft"
+                shadows='soft'
                 fallback={<Fallback />}
                 aria-label={props.altText}
-                role="img"
+                role='img'
                 gl={glProps}
                 //onCreated={onCanvasCreatedHandler}
             >
                 <Suspense fallback={null}>
-
                     <AdaptiveDpr pixelated />
 
                     <PerspectiveCamera
-                        makeDefault={true}
+                        makeDefault
                         fov={75}
                         near={0.01}
                         far={3}
                         position={[0, 0.06, 1]}
                     />
-                    
-                    <color attach="background" args={['#2f0f30']} />
+
+                    <color attach='background' args={['#2f0f30']} />
 
                     {/* the following components can be useful in development */}
                     {/*<axesHelper />*/}
@@ -87,16 +89,14 @@ const WorldScene: React.FC<IProps> = (props) => {
                     {/*<PerformanceMonitor onChange={onPerformanceChangeHandler} />*/}
                     {/* GUI: look at https://github.com/pmndrs/leva */}
 
-                    <ambientLight color="#ecd7e2" intensity={1.5} />
+                    <ambientLight color='#ecd7e2' intensity={1.5} />
                     <spotLight position={[10, 10, 10]} angle={0.15} penumbra={1} intensity={1} castShadow />
-                    
+
                     {/*<SoftShadows size={10} samples={17} color="#2f0f30" near={9} far={20} />*/}
                     {/*<ContactShadows position={[0, -1.5, 0]} opacity={0.75} scale={10} blur={2.5} far={4} />*/}
                     {/*<Environment preset="city" />*/}
 
-                    <OrbitControls enablePan={true} enableZoom={true} enableRotate={true} minDistance={2} maxDistance={10} />
-                    
-
+                    <OrbitControls enablePan enableZoom enableRotate minDistance={2} maxDistance={10} />
                 </Suspense>
             </Canvas>
             {/*<Loader />*/}
