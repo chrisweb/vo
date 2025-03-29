@@ -1,10 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-        experimental: {
-            //clientInstrumentationHook: false,
-        },
-
+    experimental: {
+        ppr: true,
+    },
 };
 
 export default nextConfig;
