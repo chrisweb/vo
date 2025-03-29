@@ -5,5 +5,17 @@
     "build": "deno run -A --node-modules-dir npm:astro build",
     "preview": "deno run -A ./dist/server/entry.mjs"
   },
-  "importMap": "./import_map.json"
+  "imports": {
+    "@astrojs/react": "npm:@astrojs/react",
+    "@deno/astro-adapter": "npm:@deno/astro-adapter",
+    "@react-three/drei": "npm:@react-three/drei",
+    "@react-three/fiber": "npm:@react-three/fiber",
+    "@types/react": "npm:@types/react",
+    "@types/react-dom": "npm:@types/react-dom",
+    "@types/three": "npm:@types/three",
+    "astro": "npm:astro",
+    "react": "npm:react",
+    "react-dom": "npm:react-dom",
+    "three": "npm:three"
+  }
 }
