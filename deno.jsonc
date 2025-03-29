@@ -1,9 +1,8 @@
 {
     "tasks": {
-        "dev": "deno run -A --node-modules-dir npm:next@canary dev --turbopack",
+        "dev": "deno run -A --node-modules-dir npm:next@canary dev",
         "build": "TODO",
-        "start": "TODO",
-        "lint": "deno lint"
+        "start": "TODO"
     },
     "imports": {
         "@types/react": "npm:@types/react@^19.0.12",
@@ -21,7 +20,11 @@
     "unstable": ["unsafe-proto"],
     "compilerOptions": {
         "jsx": "react-jsx",
-        "jsxImportSource": "react"
+        "jsxImportSource": "react",
+        "lib": [
+            "dom",
+            "deno.window"
+        ]
     },
     "lint": {
         "include": [
@@ -31,10 +34,14 @@
         ],
         "rules": {
             "tags": [
-                "recommended"
+                "recommended",
+                "fresh",
+                "jsx",
+                "react"
             ]
         }
     },
+    // https://docs.deno.com/lint/ (searchable list of rules)
     "fmt": {
         "include": [
             "app/",
@@ -42,6 +49,7 @@
         ],
         "indentWidth": 4,
         "semiColons": false,
-        "lineWidth": 160
+        "lineWidth": 160,
+        "singleQuote": true
     }
 }
