@@ -17,6 +17,8 @@
         "three": "npm:three@^0.174.0",
         "typescript": "npm:typescript@^5.8.2"
     },
+    // https://docs.deno.com/examples/next_tutorial/#create-a-next.js-app-with-deno
+    "unstable": ["unsafe-proto"],
     "compilerOptions": {
         "jsx": "react-jsx",
         "jsxImportSource": "react"
