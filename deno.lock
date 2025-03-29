@@ -9,7 +9,9 @@
     "npm:next@^15.3.0-canary.24": "15.3.0-canary.24_react@19.0.0_react-dom@19.0.0__react@19.0.0",
     "npm:next@canary": "15.3.0-canary.24_react@19.0.0_react-dom@19.0.0__react@19.0.0",
     "npm:react-dom@^19.1.0-canary-4280563b-20250326": "19.1.0-canary-ff628334-20250205_react@19.1.0-canary-ff628334-20250205",
+    "npm:react-dom@canary": "19.1.0-canary-313332d1-20250326_react@19.1.0-canary-313332d1-20250326",
     "npm:react@^19.1.0-canary-4280563b-20250326": "19.1.0-canary-ff628334-20250205",
+    "npm:react@canary": "19.1.0-canary-313332d1-20250326",
     "npm:three@0.174": "0.174.0",
     "npm:typescript@^5.8.2": "5.8.2"
   },
@@ -466,6 +468,13 @@
         "scheduler@0.25.0"
       ]
     },
+    "react-dom@19.1.0-canary-313332d1-20250326_react@19.1.0-canary-313332d1-20250326": {
+      "integrity": "sha512-f6i3GNCIdMEB+rpjsjnaAUOk4V5lYADw93MzDuVfP7972PKv3qY44XKrYnJWh/sCuCrIhKm0dXbwkQO92I3nlw==",
+      "dependencies": [
+        "react@19.1.0-canary-313332d1-20250326",
+        "scheduler@0.26.0-canary-313332d1-20250326"
+      ]
+    },
     "react-dom@19.1.0-canary-ff628334-20250205_react@19.1.0-canary-ff628334-20250205": {
       "integrity": "sha512-O/FFWzQNHqKLavROUliPXDPAwJcjwDcFbZmg2YfsWtSDJj1pRFTNzYvOUChC/hgBQiIM5rAiznQjBw2D9naH1g==",
       "dependencies": [
@@ -489,6 +498,9 @@
     "react@19.0.0": {
       "integrity": "sha512-V8AVnmPIICiWpGfm6GLzCR/W5FXLchHop40W4nXBmdlEceh16rCN8O8LNWm5bh5XUX91fh7KpA+W0TgMKmgTpQ=="
     },
+    "react@19.1.0-canary-313332d1-20250326": {
+      "integrity": "sha512-pLhGcM3gNRXUwAM0hvTCTCS2k/OcwxwwhYer1QYHQ56qRBCFbi+wS5HQdDVWLdLLR/dYc3oSHdYjEMePz7wVyA=="
+    },
     "react@19.1.0-canary-ff628334-20250205": {
       "integrity": "sha512-lJUElq6aqp9uYWXx+yGb1yzVU/vvdu1ffQ+Ly56jlKPrgJQeZvX3dTmSjIcbTJJGq9OhvoRWz/0PUC1r3lx0xw=="
     },
@@ -500,6 +512,9 @@
     },
     "scheduler@0.25.0": {
       "integrity": "sha512-xFVuu11jh+xcO7JOAGJNOXld8/TcEHK/4CituBUeUb5hqxJLj9YuemAEuvm9gQ/+pgXYfbQuqAkiYu+u7YEsNA=="
+    },
+    "scheduler@0.26.0-canary-313332d1-20250326": {
+      "integrity": "sha512-PHstwXBe32G9rOL/sPo1AXwPhyeTz5j5Qh72gzk4Bb0rBMyVEZKng4Bj7C4z8O5TkVLMEDg3RSgJEFI5D+0u8A=="
     },
     "scheduler@0.26.0-canary-ff628334-20250205": {
       "integrity": "sha512-U0tZuylPZVLsLMHfoqXdURMPdHXd8nBqqJXIQCiT0NQqY5wxc4I+Wsg1XFAY2WY0WRh6U0c3WMljp2JvRjXKow=="
@@ -675,9 +690,9 @@
       "npm:@react-three/fiber@^9.1.0",
       "npm:@types/react-dom@^19.0.4",
       "npm:@types/react@^19.0.12",
-      "npm:next@^15.3.0-canary.24",
-      "npm:react-dom@^19.1.0-canary-4280563b-20250326",
-      "npm:react@^19.1.0-canary-4280563b-20250326",
+      "npm:next@canary",
+      "npm:react-dom@canary",
+      "npm:react@canary",
       "npm:three@0.174",
       "npm:typescript@^5.8.2"
     ]
