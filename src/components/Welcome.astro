@@ -16,23 +16,6 @@ const {
   <div class="welcome-content">
     <h1>{title}</h1>
     <p>{description}</p>
-    <div class="features">
-      <div class="feature">
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg>
-        <h3>Multiple frameworks</h3>
-        <p>Use React, Vue, Svelte, or just plain HTML+JS in your project</p>
-      </div>
-      <div class="feature">
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon"><path d="M20.24 12.24a6 6 0 0 0-8.49-8.49L5 10.5V19h8.5z"></path><line x1="16" y1="8" x2="2" y2="22"></line><line x1="17.5" y1="15" x2="9" y2="15"></line></svg>
-        <h3>Fast builds</h3>
-        <p>Astro optimizes your site with server-side rendering and zero JS by default</p>
-      </div>
-      <div class="feature">
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon"><circle cx="12" cy="12" r="10"></circle><path d="M8 14s1.5 2 4 2 4-2 4-2"></path><line x1="9" y1="9" x2="9.01" y2="9"></line><line x1="15" y1="9" x2="15.01" y2="9"></line></svg>
-        <h3>Intuitive</h3>
-        <p>Designed with a familiar syntax for web developers</p>
-      </div>
-    </div>
   </div>
 </div>
 
@@ -49,53 +32,5 @@ const {
   .welcome-content {
     max-width: 800px;
     margin: 0 auto;
-  }
-
-  h1 {
-    font-size: 2.5rem;
-    margin-bottom: 1rem;
-  }
-
-  p {
-    font-size: 1.25rem;
-    line-height: 1.6;
-    margin-bottom: 2rem;
-  }
-
-  .features {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 2rem;
-    margin-top: 3rem;
-  }
-
-  .feature {
-    background-color: rgba(255, 255, 255, 0.1);
-    padding: 1.5rem;
-    border-radius: 0.5rem;
-    backdrop-filter: blur(10px);
-    transition: transform 0.2s, background-color 0.2s;
-  }
-
-  .feature:hover {
-    background-color: rgba(255, 255, 255, 0.2);
-    transform: translateY(-5px);
-  }
-
-  .icon {
-    display: inline-block;
-    margin-bottom: 1rem;
-    color: white;
-  }
-
-  h3 {
-    margin: 0.5rem 0 1rem;
-    font-size: 1.25rem;
-  }
-
-  .feature p {
-    font-size: 1rem;
-    margin: 0;
-    opacity: 0.9;
   }
 </style>

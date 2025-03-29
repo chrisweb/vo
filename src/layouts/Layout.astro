@@ -16,33 +16,9 @@ const { title } = Astro.props;
     <title>{title}</title>
   </head>
   <body>
-    <header>
-      <div class="container">
-        <div class="logo">
-          <a href="/">
-            <img src="/favicon.svg" alt="Logo" width="40" height="40" />
-            <span>Astro + React</span>
-          </a>
-        </div>
-        <nav>
-          <ul>
-            <li><a href="/">Home</a></li>
-            <li><a href="/about">About</a></li>
-            <li><a href="/contact">Contact</a></li>
-          </ul>
-        </nav>
-      </div>
-    </header>
-    
     <main class="container">
       <slot />
     </main>
-    
-    <footer>
-      <div class="container">
-        <p>&copy; {new Date().getFullYear()} Astro + React Demo. All rights reserved.</p>
-      </div>
-    </footer>
   </body>
 </html>
 
@@ -79,56 +55,5 @@ const { title } = Astro.props;
     max-width: var(--max-width);
     margin-inline: auto;
     padding: 0 1.5rem;
-  }
-  
-  header {
-    background-color: white;
-    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
-    padding: 1rem 0;
-  }
-  
-  header .container {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  
-  .logo a {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    text-decoration: none;
-    color: var(--color-primary);
-    font-weight: bold;
-    font-size: 1.25rem;
-  }
-  
-  nav ul {
-    display: flex;
-    list-style: none;
-    gap: 1.5rem;
-  }
-  
-  nav a {
-    text-decoration: none;
-    color: var(--color-text);
-    font-weight: 500;
-    transition: color 0.2s ease;
-  }
-  
-  nav a:hover {
-    color: var(--color-primary);
-  }
-  
-  main {
-    flex: 1;
-    padding: 2rem 0;
-  }
-  
-  footer {
-    background-color: #f1f5f9;
-    padding: 2rem 0;
-    text-align: center;
-    color: #64748b;
   }
 </style>
