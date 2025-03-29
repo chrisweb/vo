@@ -1,0 +1,9 @@
+{
+  "tasks": {
+    "dev": "deno run -A --node-modules-dir npm:astro dev",
+    "start": "deno run -A --node-modules-dir npm:astro preview",
+    "build": "deno run -A --node-modules-dir npm:astro build",
+    "preview": "deno run -A ./dist/server/entry.mjs"
+  },
+  "importMap": "./import_map.json"
+}
