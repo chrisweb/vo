@@ -7,5 +7,9 @@ import denoAdapter from '@deno/astro-adapter';
 export default defineConfig({
   integrations: [react()],
   output: 'server',
-  adapter: denoAdapter()
+  adapter: denoAdapter(),
+  server: {
+    // Ensure server responds to connection requests
+    //host: true
+  }
 });

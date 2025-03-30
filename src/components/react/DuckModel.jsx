@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { OrbitControls, PerspectiveCamera, useGLTF } from "@react-three/drei";
 
@@ -7,7 +7,7 @@ function Model() {
   const modelRef = useRef();
 
   // Slowly rotate the model
-  useFrame((state) => {
+  useFrame((/*state*/) => {
     if (modelRef.current) {
       modelRef.current.rotation.y += 0.005;
     }
