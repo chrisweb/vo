@@ -17,5 +17,37 @@
     "react": "npm:react",
     "react-dom": "npm:react-dom",
     "three": "npm:three"
+  },
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "jsxImportSource": "react",
+    "lib": [
+      "dom",
+      "deno.window"
+    ]
+  },
+  "lint": {
+    "include": [
+      "src/"
+    ],
+    "rules": {
+      "tags": [
+        "recommended",
+        "fresh",
+        "jsx",
+        "react"
+      ]
+    }
+  },
+  // https://docs.deno.com/lint/ (searchable list of rules)
+  "fmt": {
+    "include": [
+      "app/",
+      "components/"
+    ],
+    "indentWidth": 4,
+    "semiColons": false,
+    "lineWidth": 160,
+    "singleQuote": true
   }
 }
