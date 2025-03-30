@@ -8,10 +8,11 @@ export default function WebSocketChat() {
 
   useEffect(() => {
     console.log("Create WebSocket connection");
+    
     const protocol = globalThis.location.protocol === "https:" ? "wss:" : "ws:";
     const wsUrl = `${protocol}//${globalThis.location.host}/api/ws`;
-
     const socket = new WebSocket(wsUrl);
+
     socketRef.current = socket;
 
     // Connection opened
