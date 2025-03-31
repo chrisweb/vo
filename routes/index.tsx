@@ -19,6 +19,15 @@ export default function Home() {
           <code class="mx-2">./routes/index.tsx</code> file, and refresh.
         </p>
         <Counter count={count} />
+        
+        <div class="mt-8">
+          <a 
+            href="/three" 
+            class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+          >
+            View 3D Scene Example
+          </a>
+        </div>
       </div>
     </div>
   );
