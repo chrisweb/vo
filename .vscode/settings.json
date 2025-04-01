@@ -6,16 +6,11 @@
     },
     "eslint.debug": true,
     "eslint.validate": [
-        "markdown",
-        "mdx",
         "javascript",
         "javascriptreact",
         "typescript",
         "typescriptreact"
     ],
-    "files.associations": {
-        "*.mdx": "markdown"
-    },
     "eslint.onIgnoredFiles": "warn",
     "eslint.probe": [
         "javascript",
@@ -23,9 +18,6 @@
         "typescript",
         "typescriptreact",
         "html",
-        "vue",
-        "markdown",
-        "mdx"
     ],
 	"editor.detectIndentation": false,
 }
