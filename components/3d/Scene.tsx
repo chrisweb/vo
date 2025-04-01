@@ -1,72 +1,97 @@
 'use client'
 
-import { Suspense } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { Canvas, type GLProps } from '@react-three/fiber'
-import {
-    AdaptiveDpr,
-    OrbitControls, /*, SoftShadows, Loader, PerformanceMonitor, PerformanceMonitorApi, Hud, useDetectGPU, useProgress, StatsGl*/
-    PerspectiveCamera,
-} from '@react-three/drei'
+import { AdaptiveDpr, PerspectiveCamera } from '@react-three/drei'
+import World from '@/components/3d/World'
 
 interface IProps extends React.PropsWithChildren {
     altText: string
 }
 
 const Scene: React.FC<IProps> = (props) => {
-    // uncomment if you want to see what useDetectGPU returns
-    //const gpuInfo = useDetectGPU()
-    //if (process.env.NODE_ENV === 'development') {
-    //console.log('useDetectGPU: ', gpuInfo)
-    //}
+    const [username, setUsername] = useState<string>('')
+    const [hasJoined, setHasJoined] = useState<boolean>(false)
 
-    /*const onCanvasCreatedHandler = (state: RootState) => {
-        //if (process.env.NODE_ENV === 'development') {
-        //console.log(state)
-        //}
-    }*/
-
-    /*const onPerformanceChangeHandler = (api: PerformanceMonitorApi) => {
-        if (process.env.NODE_ENV === 'development') {
-            console.log(api.averages)
-            console.log(api.fps)
-            console.log(api.refreshrate)
-            console.log(api.frames)
+    // Check localStorage for saved username on component mount
+    useEffect(() => {
+        const savedUsername = localStorage.getItem('vo-username')
+        if (savedUsername) {
+            setUsername(savedUsername)
+            setHasJoined(true)
         }
-    }*/
+    }, [])
 
-    /*function Loader() {
-        //const { active, progress, errors, item, loaded, total } = useProgress()
-        //if (process.env.NODE_ENV === 'development') {
-        //console.log(active, progress, errors, item, loaded, total)
-        //}
-    }*/
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault()
+        if (username.trim()) {
+            // Save username to localStorage
+            localStorage.setItem('vo-username', username.trim())
+            setHasJoined(true)
+        }
+    }
 
     const Fallback: React.FC = () => {
-        return <>Sorry, this 3D animation can not be displayed on your device</>
+        return (
+            <>Sorry, this 3D animation can not be displayed on your device
+            </>
+        )
     }
 
     const glProps: GLProps = {
         powerPreference: 'high-performance',
         depth: false,
-        //unpackColorSpace: 'srgb',
-        //drawingBufferColorSpace: 'display-p3',
-        //unpackColorSpace: 'display-p3',
+    }
+
+    if (!hasJoined) {
+        return (
+            <div className="flex justify-center items-center min-h-[50vh]">
+                <div className="bg-gray-800 p-8 rounded-lg shadow-lg w-full max-w-md">
+                    <h2 className="text-2xl font-bold text-white mb-6 text-center">
+                        Join Virtual World
+                    </h2>
+                    <form onSubmit={handleSubmit} className="space-y-6">
+                        <div>
+                            <label
+                                htmlFor="username"
+                                className="block text-sm font-medium text-gray-300 mb-2"
+                            >
+                                Username
+                            </label>
+                            <input
+                                type="text"
+                                id="username"
+                                className="w-full px-4 py-2 rounded-md bg-gray-700 text-white border border-gray-600 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                                value={username}
+                                onChange={(e) => {
+                                    setUsername(e.target.value)
+                                }}
+                                placeholder="Enter your username"
+                                required
+                            />
+                        </div>
+                        <button
+                            type="submit"
+                            className="w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition duration-150"
+                        >
+                            Join World
+                        </button>
+                    </form>
+                </div>
+            </div>
+        )
     }
 
     return (
         <>
             <Canvas
-                // https://docs.pmnd.rs/react-three-fiber/tutorials/v8-migration-guide#new-pixel-ratio-default
-                // pixel ratio, should between 1 or 2, a small pixel ratio will improve performance
-                // but will also reduce the quality of the image
-                dpr={[1, 1.5]} // Limit pixel ratio to improve performance
-                // https://docs.pmnd.rs/react-three-fiber/api/canvas#render-defaults
-                shadows='soft'
+                dpr={[1, 1.5]}
+                shadows="soft"
                 fallback={<Fallback />}
                 aria-label={props.altText}
-                role='img'
+                role="img"
                 gl={glProps}
-                //onCreated={onCanvasCreatedHandler}
+                style={{ height: '80vh' }}
             >
                 <Suspense fallback={null}>
                     <AdaptiveDpr pixelated />
@@ -75,31 +100,24 @@ const Scene: React.FC<IProps> = (props) => {
                         makeDefault
                         fov={75}
                         near={0.01}
-                        far={3}
-                        position={[0, 0.06, 1]}
+                        far={50}
+                        position={[0, 5, 10]}
                     />
 
-                    <color attach='background' args={['#2f0f30']} />
+                    <color attach="background" args={['#2f0f30']} />
 
-                    {/* the following components can be useful in development */}
-                    {/*<axesHelper />*/}
-                    {/*<gridHelper />*/}
-                    {/*<Stats />*/}
-                    {/*<StatsGl />*/}
-                    {/*<PerformanceMonitor onChange={onPerformanceChangeHandler} />*/}
-                    {/* GUI: look at https://github.com/pmndrs/leva */}
+                    <ambientLight color="#ecd7e2" intensity={1.5} />
+                    <spotLight
+                        position={[10, 10, 10]}
+                        angle={0.15}
+                        penumbra={1}
+                        intensity={1}
+                        castShadow={false}
+                    />
 
-                    <ambientLight color='#ecd7e2' intensity={1.5} />
-                    <spotLight position={[10, 10, 10]} angle={0.15} penumbra={1} intensity={1} castShadow />
-
-                    {/*<SoftShadows size={10} samples={17} color="#2f0f30" near={9} far={20} />*/}
-                    {/*<ContactShadows position={[0, -1.5, 0]} opacity={0.75} scale={10} blur={2.5} far={4} />*/}
-                    {/*<Environment preset="city" />*/}
-
-                    <OrbitControls enablePan enableZoom enableRotate minDistance={2} maxDistance={10} />
+                    <World username={username} />
                 </Suspense>
             </Canvas>
-            {/*<Loader />*/}
         </>
     )
 }
