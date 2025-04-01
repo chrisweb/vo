@@ -28,6 +28,7 @@ const ignoresConfig = [
             '.next/',
             '.vscode/',
             'public/',
+            'components/ui/',
         ]
     },
 ]
@@ -56,19 +57,9 @@ const tseslintConfig = tseslint.config(
             '@stylistic': stylisticPlugin,
         },
         rules: {
-            /*'@typescript-eslint/naming-convention': [
-                'error',
-                {
-                    'selector': 'interface',
-                    'format': [
-                        'PascalCase',
-                    ],
-                    'custom': {
-                        'regex': '^I[A-Z]',
-                        'match': true,
-                    },
-                }
-            ],*/
+            // this is an import rule, but it is off because typescript already displays errors
+            // the typescript error will highlight the exact error
+            '@typescript-eslint/no-unsafe-call': 'off',
             '@typescript-eslint/ban-ts-comment': [
                 'error',
                 {
@@ -163,6 +154,7 @@ const stylisticConfig = [
             // custom rules
             // https://github.com/typescript-eslint/typescript-eslint/issues/1824
             '@stylistic/indent': ['warn', 4],
+            '@stylistic/indent-binary-ops': ['warn', 4],
             '@stylistic/quotes': ['warn', 'single', { avoidEscape: true, allowTemplateLiterals: true }],
             '@stylistic/jsx-quotes': ['warn', 'prefer-double'],
             '@stylistic/semi': ['warn', 'never'],
