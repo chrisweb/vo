@@ -14,6 +14,12 @@ start dev server:
 npm run dev
 ```
 
+the project is currently a prototype so some dependencies are set to "canary" or "beta", so to update the package-lock.json it is recommended to run the update command (for example using install will not update canary version in the lock file):
+
+```shell
+npm update
+```
+
 ### scripts
 
 `npm run dev`: launch dev server (with turbopack)  
