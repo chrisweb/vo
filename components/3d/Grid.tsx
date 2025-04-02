@@ -1,5 +1,3 @@
-'use client'
-
 import { useThree } from '@react-three/fiber'
 import { useEffect } from 'react'
 import { GridCell, GridPath } from '@/helpers/grid'
