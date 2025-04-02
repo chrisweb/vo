@@ -94,6 +94,8 @@ const World: React.FC<WorldProps> = ({ username }) => {
             // convert next grid cell to world position
             const nextPosition = gridCellToPosition(nextCell)
 
+            console.log('Moving user to position:', nextPosition, 'from cell', currentCell, 'to cell', nextCell);
+            
             // update user position to the center of the next cell
             updateUserPosition(
                 new Vector3(nextPosition.x, nextPosition.y, nextPosition.z),
