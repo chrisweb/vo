@@ -2,9 +2,10 @@
 
 import { Cylinder, Text } from '@react-three/drei'
 import { Vector3 } from 'three'
+import { GridCell } from '@/helpers/grid'
 
 interface ObstaclesProps {
-    obstacles: { x: number, z: number }[]
+    obstacles: GridCell[]
 }
 
 export const Obstacles: React.FC<ObstaclesProps> = ({ obstacles }) => {

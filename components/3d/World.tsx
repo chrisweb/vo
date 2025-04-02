@@ -8,7 +8,7 @@ import { Obstacles } from './Obstacles'
 import { UserAvatar } from './UserAvatar'
 import { useUser } from '@/hooks/useUser'
 import { usePathfinding } from '@/hooks/usePathfinding'
-import { positionToCell } from '@/helpers/grid'
+import { GridCell, positionToGridCell, gridCellToPosition } from '@/helpers/grid'
 
 interface WorldProps {
     username: string
@@ -19,8 +19,8 @@ const GRID_WIDTH = 20
 const GRID_HEIGHT = 20
 
 // put some fake obstacles in the grid
-// start is 0,0 and end is 19,19
-const OBSTACLES = [
+// start is 0,0 and end is 19,19 (0-based coordinates)
+const OBSTACLES: GridCell[] = [
     { x: 19, z: 13 },
     { x: 15, z: 5 },
     { x: 7, z: 15 },
@@ -63,7 +63,7 @@ const World: React.FC<WorldProps> = ({ username }) => {
     })
 
     useEffect(() => {
-        // Only initialize if userId is empty (meaning we haven't initialized yet)
+        // only initialize if userId is empty (meaning we haven't initialized yet)
         if (!userId) {
             const storedUsername = localStorage.getItem('username') ?? username
             if (storedUsername) {
@@ -87,14 +87,18 @@ const World: React.FC<WorldProps> = ({ username }) => {
         const moveAlongPath = () => {
             const nextCell = path[0]
             const newPath = path.slice(1)
-            const [currentX, currentZ] = positionToCell(position)
-            const newX = nextCell[0]
-            const newZ = nextCell[1]
 
+            // get current grid cell from position
+            const currentCell = positionToGridCell(position)
+
+            // convert next grid cell to world position
+            const nextPosition = gridCellToPosition(nextCell)
+
+            // update user position to the center of the next cell
             updateUserPosition(
-                new Vector3(newX + 0.5, 0.5, newZ + 0.5),
-                currentX,
-                currentZ,
+                new Vector3(nextPosition.x, nextPosition.y, nextPosition.z),
+                currentCell.x,
+                currentCell.z,
                 OBSTACLES
             )
 
@@ -108,7 +112,7 @@ const World: React.FC<WorldProps> = ({ username }) => {
         }
 
         // movement delay
-        const timer = setTimeout(moveAlongPath, 200)
+        const timer = setTimeout(moveAlongPath, 100)
 
         return () => {
             clearTimeout(timer)
@@ -128,7 +132,7 @@ const World: React.FC<WorldProps> = ({ username }) => {
                 path={path}
             />
             <Obstacles obstacles={OBSTACLES} />
-            {/* Current user */}
+            {/* current user */}
             <UserAvatar
                 x={position.x}
                 y={position.y}
@@ -137,7 +141,7 @@ const World: React.FC<WorldProps> = ({ username }) => {
                 color="#3498db"
                 isCurrentUser={true}
             />
-            {/* Other users */}
+            {/* other users */}
             {users
                 .filter(user => user.id !== userId)
                 .map((user, index) => (

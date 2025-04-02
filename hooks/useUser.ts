@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { Vector3 } from 'three'
 import { supabase } from '@/utils/supabase'
 import { REALTIME_LISTEN_TYPES, type RealtimeChannel } from '@supabase/supabase-js'
+import { GridCell, cellToString, positionToGridCell, gridCellToPosition } from '@/helpers/grid'
 
 export interface UserData {
     id: string
@@ -35,35 +36,32 @@ export const useUser = () => {
     const getRandomCellPosition = useCallback(
         (
             existingUsers: UserData[],
-            obstacles: {
-                x: number
-                z: number
-            }[],
+            obstacles: GridCell[],
             gridWidth: number,
             gridHeight: number
         ): Vector3 => {
-            let x = 0
-            let z = 0
+            // TODO: maybe instead of setting a default value
+            // if we can't find a cell we throw an error???
+            let randomCell: GridCell = { x: 0, z: 0 }
             let positionFound = false
 
             // track occupied cells
             const occupied = new Set<string>(occupiedCells)
             existingUsers.forEach((user) => {
-                const cellX = Math.floor(user.position.x)
-                const cellZ = Math.floor(user.position.z)
-                occupied.add(`${cellX.toString()},${cellZ.toString()}`)
+                const cell = positionToGridCell(user.position)
+                occupied.add(cellToString(cell))
             })
 
             while (!positionFound) {
-
-                // generate random cell coordinates
-                x = Math.floor(Math.random() * gridWidth)
-                z = Math.floor(Math.random() * gridHeight)
+                // generate random cell coordinates (0 to gridWidth-1, 0 to gridHeight-1)
+                const x = Math.floor(Math.random() * gridWidth)
+                const z = Math.floor(Math.random() * gridHeight)
+                randomCell = { x, z }
 
                 // check if cell is occupied or has an obstacle
-                const cellKey = `${x.toString()},${z.toString()}`
+                const cellKey = cellToString(randomCell)
                 const isObstacle = obstacles.some(obs =>
-                    obs.x === x && obs.z === z
+                    obs.x === randomCell.x && obs.z === randomCell.z
                 )
 
                 if (!occupied.has(cellKey) && !isObstacle) {
@@ -71,18 +69,15 @@ export const useUser = () => {
                 }
             }
 
-            // return the center of the cell (x+0.5, 0.5, z+0.5)
-            return new Vector3(x + 0.5, 0.5, z + 0.5)
+            const worldPos = gridCellToPosition(randomCell)
+            return new Vector3(worldPos.x, worldPos.y, worldPos.z)
         },
         [occupiedCells]
     )
 
     const initializeUser = useCallback((
         username: string,
-        obstacles: {
-            x: number
-            z: number
-        }[],
+        obstacles: GridCell[],
         gridWidth: number,
         gridHeight: number
     ) => {
@@ -91,6 +86,7 @@ export const useUser = () => {
         setUserId(newUserId)
 
         const randomPosition = getRandomCellPosition([], obstacles, gridWidth, gridHeight)
+
         setPosition(randomPosition)
         setLastBroadcastedPosition(randomPosition)
 
@@ -99,9 +95,11 @@ export const useUser = () => {
             username,
             position: randomPosition,
         }
+
         setUsers(currentUsers => [...currentUsers, newUser])
 
-        const cellKey = `${Math.floor(randomPosition.x).toString()},${Math.floor(randomPosition.z).toString()}`
+        const cell = positionToGridCell(randomPosition)
+        const cellKey = cellToString(cell)
 
         setOccupiedCells((prev) => {
             const newSet = new Set(prev)
@@ -138,10 +136,12 @@ export const useUser = () => {
             setOccupiedCells((prev) => {
                 const newSet = new Set(prev)
                 const pos = payload.payload.position
-                const cellKey = `${Math.floor(pos.x).toString()},${Math.floor(pos.z).toString()}`
+                const cell = positionToGridCell(pos)
+                const cellKey = cellToString(cell)
                 newSet.add(cellKey)
                 return newSet
             })
+
         }).subscribe()
 
         setChannelState(channel)
@@ -165,13 +165,13 @@ export const useUser = () => {
         newPosition: Vector3,
         currentX: number,
         currentZ: number,
-        obstacles: {
-            x: number
-            z: number
-        }[]
+        obstacles: GridCell[]
     ) => {
-        const newX = Math.floor(newPosition.x)
-        const newZ = Math.floor(newPosition.z)
+        // Get new grid cell
+        const newCell = positionToGridCell(newPosition)
+
+        // Create current cell from the passed coordinates
+        const currentCell: GridCell = { x: currentX, z: currentZ }
 
         // update occupied cells
         setOccupiedCells((prev) => {
@@ -179,22 +179,20 @@ export const useUser = () => {
             // remove old cell if it's not an obstacle
             if (
                 !obstacles.some(obs =>
-                    obs.x === currentX && obs.z === currentZ
+                    obs.x === currentCell.x && obs.z === currentCell.z
                 )
             ) {
-                newSet.delete(
-                    `${currentX.toString()},${currentZ.toString()}`
-                )
+                newSet.delete(cellToString(currentCell))
             }
             // add new cell
-            newSet.add(`${newX.toString()},${newZ.toString()}`)
+            newSet.add(cellToString(newCell))
             return newSet
         })
 
         setPosition(newPosition)
     }, [])
 
-    // Effect to broadcast position updates only when position changes
+    // broadcast position updates only when position changes
     useEffect(() => {
         if (!channelState || !userId || !lastBroadcastedPosition) return
 
@@ -203,7 +201,6 @@ export const useUser = () => {
             position.y !== lastBroadcastedPosition.y ||
             position.z !== lastBroadcastedPosition.z) {
 
-            // Get username from the current users array
             const currentUser = users.find(user => user.id === userId)
             if (!currentUser) return
 
@@ -213,7 +210,7 @@ export const useUser = () => {
                 position,
             }
 
-            // Create payload and send update
+            // create payload and send update
             const positionUpdate: PayloadData = {
                 type: REALTIME_LISTEN_TYPES.BROADCAST,
                 event: 'position',
@@ -224,7 +221,6 @@ export const useUser = () => {
                 console.error('Failed to send position update')
             })
 
-            // Update last broadcasted position
             setLastBroadcastedPosition(position.clone())
         }
     }, [channelState, userId, position, lastBroadcastedPosition, users])
