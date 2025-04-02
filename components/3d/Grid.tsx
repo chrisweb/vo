@@ -87,12 +87,12 @@ const GridCells: React.FC<GridCellsProps> = ({
                 const isTarget = targetCell && targetCell[0] === x && targetCell[1] === z
                 const isPathCell = path.some(cell => cell[0] === x && cell[1] === z)
 
-                let cellColor = '#22222210'
-                if (isTarget) cellColor = '#2563eb40'
-                else if (isPathCell) cellColor = '#3b82f620'
+                let cellColor = '#e9e9e9'
+                if (isTarget) cellColor = '#2563eb'
+                else if (isPathCell) cellColor = '#6280b2'
                 else if (isObstacle) {
                     cellColor = '#7c2d12'
-                } else if (isOccupied) cellColor = '#1a365d20'
+                } else if (isOccupied) cellColor = '#1a365d'
 
                 return (
                     <mesh

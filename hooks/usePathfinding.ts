@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useState, useMemo } from 'react'
 import { Vector3 } from 'three'
 import PF from 'pathfinding'
 
@@ -25,31 +25,39 @@ export const usePathfinding = ({
     occupiedCells,
     userPosition,
 }: PathfindingHelperProps) => {
-    const [grid, setGrid] = useState<PF.Grid | null>(null)
-    const [finder, setFinder] = useState<PF.AStarFinder | null>(null)
+
+    const [gridState, setGridState] = useState<PF.Grid | null>(null)
+    const [finderState, setFinderState] = useState<PF.AStarFinder | null>(null)
     const [targetCell, setTargetCell] = useState<[number, number] | null>(null)
     const [path, setPath] = useState<number[][]>([])
     const [isMoving, setIsMoving] = useState(false)
-    const position = new Vector3(userPosition.x, 0, userPosition.z)
+    const position = useMemo(() => new Vector3(userPosition.x, 0, userPosition.z), [userPosition.x, userPosition.z])
 
     // pathfinding grid and finder
     useEffect(() => {
 
-        const newGrid = new PF.Grid(gridWidth, gridHeight)
+        const grid = new PF.Grid(gridWidth, gridHeight)
 
         // mark obstacles as unwalkable
         obstacles.forEach((obstacle) => {
-            newGrid.setWalkableAt(obstacle.x, obstacle.z, false)
+            // boundary check to prevent accessing out-of-bounds cells
+            if (obstacle.x >= 0 && obstacle.x < gridWidth &&
+                obstacle.z >= 0 && obstacle.z < gridHeight) {
+                grid.setWalkableAt(obstacle.x, obstacle.z, false)
+            } else {
+                console.warn(`Obstacle out of bounds: (${obstacle.x.toString()}, ${obstacle.z.toString()})`)
+            }
         })
 
-        setGrid(newGrid)
+        setGridState(grid)
 
         // create a new pathfinder with compatible options
         const newFinder = new PF.AStarFinder({
             diagonalMovement: PF.DiagonalMovement.Never,
         })
 
-        setFinder(newFinder)
+        setFinderState(newFinder)
+
     }, [gridWidth, gridHeight, obstacles])
 
     const findPath = useCallback((
@@ -58,7 +66,7 @@ export const usePathfinding = ({
         targetX: number,
         targetZ: number,
     ) => {
-        if (!grid || !finder) return []
+        if (!gridState || !finderState) return []
 
         // if cells are the same, return empty path
         if (startX === targetX && startZ === targetZ) return []
@@ -78,7 +86,7 @@ export const usePathfinding = ({
         if (isOccupiedByUser) return []
 
         // clone the grid to avoid modifying the original
-        const gridClone = grid.clone()
+        const gridClone = gridState.clone()
 
         // mark cells occupied by other users as unwalkable
         occupiedCells.forEach((cell) => {
@@ -87,16 +95,18 @@ export const usePathfinding = ({
             const isCurrentUserPos = x === Math.floor(position.x) &&
                 z === Math.floor(position.z)
 
-            if (!isCurrentUserPos) {
+            if (!isCurrentUserPos && x >= 0 && x < gridClone.width && z >= 0 && z < gridClone.height) {
                 gridClone.setWalkableAt(x, z, false)
             }
         })
 
         // check if target is walkable
-        gridClone.setWalkableAt(targetX, targetZ, true)
+        if (targetX >= 0 && targetX < gridClone.width && targetZ >= 0 && targetZ < gridClone.height) {
+            gridClone.setWalkableAt(targetX, targetZ, true)
+        }
 
         // Find path
-        const pfPath = finder.findPath(
+        const pfPath = finderState.findPath(
             startX,
             startZ,
             targetX,
@@ -107,17 +117,18 @@ export const usePathfinding = ({
         // convert path format and remove the starting position
         return pfPath.slice(1).map(point => [point[0], point[1]])
 
-    }, [grid, finder, obstacles, occupiedCells, position])
+    }, [gridState, finderState, obstacles, occupiedCells, position])
 
     const handleGridClick = useCallback(
         (x: number, z: number) => {
-            if (isMoving) return
 
             // check if target cell has an obstacle
-            const isObstacle = obstacles.some(obs =>
-                obs.x === x && obs.z === z
-            )
-            if (isObstacle) return
+            if (!gridState?.isWalkableAt(x, z)) return
+
+            // check if target cell is user's current position
+            const userX = Math.floor(userPosition.x)
+            const userZ = Math.floor(userPosition.z)
+            if (x === userX && z === userZ) return
 
             const startX = Math.floor(userPosition.x)
             const startZ = Math.floor(userPosition.z)

@@ -6,20 +6,30 @@ import { Vector3 } from 'three'
 import { Grid } from './Grid'
 import { Obstacles } from './Obstacles'
 import { UserAvatar } from './UserAvatar'
-import { useUser } from '@/hooks/User'
-import { usePathfinding } from '@/hooks/Pathfinding'
-import {
-    GRID_WIDTH,
-    GRID_HEIGHT,
-    OBSTACLES,
-    positionToCell
-} from '@/lib/utils'
+import { useUser } from '@/hooks/useUser'
+import { usePathfinding } from '@/hooks/usePathfinding'
+import { positionToCell } from '@/helpers/grid'
 
 interface WorldProps {
     username: string
 }
 
+// grid dimensions: 20x20 = 400 cells
+const GRID_WIDTH = 20
+const GRID_HEIGHT = 20
+
+// put some fake obstacles in the grid
+// start is 0,0 and end is 19,19
+const OBSTACLES = [
+    { x: 19, z: 13 },
+    { x: 15, z: 5 },
+    { x: 7, z: 15 },
+    { x: 3, z: 7 },
+    { x: 0, z: 18 },
+]
+
 const World: React.FC<WorldProps> = ({ username }) => {
+
     const controlsRef = useRef(null)
 
     // user
