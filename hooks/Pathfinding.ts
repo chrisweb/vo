@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { Vector3 } from 'three'
 import PF from 'pathfinding'
 
-interface UsePathfindingProps {
+interface PathfindingHelperProps {
     gridWidth: number
     gridHeight: number
     obstacles: {
@@ -24,7 +24,7 @@ export const usePathfinding = ({
     obstacles,
     occupiedCells,
     userPosition,
-}: UsePathfindingProps) => {
+}: PathfindingHelperProps) => {
     const [grid, setGrid] = useState<PF.Grid | null>(null)
     const [finder, setFinder] = useState<PF.AStarFinder | null>(null)
     const [targetCell, setTargetCell] = useState<[number, number] | null>(null)

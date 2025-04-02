@@ -1,9 +1,9 @@
 'use client'
 
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Vector3 } from 'three'
 import { supabase } from '@/utils/supabase'
-import { REALTIME_LISTEN_TYPES } from '@supabase/supabase-js'
+import { REALTIME_LISTEN_TYPES, type RealtimeChannel } from '@supabase/supabase-js'
 
 export interface UserData {
     id: string
@@ -17,7 +17,7 @@ interface PayloadData {
     payload: UserData
 }
 
-export const useUsers = () => {
+export const useUser = () => {
 
     const [position, setPosition] = useState<Vector3>(
         new Vector3(0.5, 0.5, 0.5)
@@ -25,6 +25,8 @@ export const useUsers = () => {
 
     const [users, setUsers] = useState<UserData[]>([])
     const [userId, setUserId] = useState('')
+    const [channelState, setChannelState] = useState<RealtimeChannel | null>(null)
+    const [lastBroadcastedPosition, setLastBroadcastedPosition] = useState<Vector3 | null>(null)
 
     // using set instead of array (as we don't want to have duplicates anyway)
     // sets are much faster for lookups than arrays
@@ -90,6 +92,7 @@ export const useUsers = () => {
 
         const randomPosition = getRandomCellPosition([], obstacles, gridWidth, gridHeight)
         setPosition(randomPosition)
+        setLastBroadcastedPosition(randomPosition)
 
         const newUser: UserData = {
             id: newUserId,
@@ -141,6 +144,8 @@ export const useUsers = () => {
             })
         }).subscribe()
 
+        setChannelState(channel)
+
         // broadcast initial position
         const initialPosition: PayloadData = {
             type: REALTIME_LISTEN_TYPES.BROADCAST,
@@ -152,25 +157,8 @@ export const useUsers = () => {
             console.error('Failed to send position update')
         })
 
-        // interval to broadcast position updates
-        const interval = setInterval(() => {
-            const userData = {
-                id: newUserId,
-                username: username,
-                position,
-            }
-            const newPosition: PayloadData = {
-                type: REALTIME_LISTEN_TYPES.BROADCAST,
-                event: 'position',
-                payload: userData,
-            }
-            channel.send(newPosition).catch(() => {
-                console.error('Failed to send position update')
-            })
-        }, 1000)
-
-        return { channel, interval }
-    }, [getRandomCellPosition, position])
+        return { channel: channel }
+    }, [getRandomCellPosition])
 
     // update user position when moving
     const updateUserPosition = useCallback((
@@ -205,6 +193,41 @@ export const useUsers = () => {
 
         setPosition(newPosition)
     }, [])
+
+    // Effect to broadcast position updates only when position changes
+    useEffect(() => {
+        if (!channelState || !userId || !lastBroadcastedPosition) return
+
+        // Check if position has changed since last broadcast
+        if (position.x !== lastBroadcastedPosition.x ||
+            position.y !== lastBroadcastedPosition.y ||
+            position.z !== lastBroadcastedPosition.z) {
+
+            // Get username from the current users array
+            const currentUser = users.find(user => user.id === userId)
+            if (!currentUser) return
+
+            const userData = {
+                id: userId,
+                username: currentUser.username,
+                position,
+            }
+
+            // Create payload and send update
+            const positionUpdate: PayloadData = {
+                type: REALTIME_LISTEN_TYPES.BROADCAST,
+                event: 'position',
+                payload: userData,
+            }
+
+            channelState.send(positionUpdate).catch(() => {
+                console.error('Failed to send position update')
+            })
+
+            // Update last broadcasted position
+            setLastBroadcastedPosition(position.clone())
+        }
+    }, [channelState, userId, position, lastBroadcastedPosition, users])
 
     return {
         position,

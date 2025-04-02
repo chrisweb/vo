@@ -6,9 +6,8 @@ import { Vector3 } from 'three'
 import { Grid } from './Grid'
 import { Obstacles } from './Obstacles'
 import { UserAvatar } from './UserAvatar'
-import { useUsers } from '@/lib/useUsers'
-import { usePathfinding } from '@/lib/usePathfinding'
-import { useKeyboardMovement } from '@/lib/useKeyboardMovement'
+import { useUser } from '@/hooks/User'
+import { usePathfinding } from '@/hooks/Pathfinding'
 import {
     GRID_WIDTH,
     GRID_HEIGHT,
@@ -31,7 +30,7 @@ const World: React.FC<WorldProps> = ({ username }) => {
         occupiedCells,
         initializeUser,
         updateUserPosition
-    } = useUsers()
+    } = useUser()
 
     // pathfinding
     const {
@@ -53,35 +52,24 @@ const World: React.FC<WorldProps> = ({ username }) => {
         }
     })
 
-    // keyboard movement
-    useKeyboardMovement({
-        position,
-        isMoving,
-        occupiedCells,
-        obstacles: OBSTACLES,
-        gridWidth: GRID_WIDTH,
-        gridHeight: GRID_HEIGHT,
-        updatePosition: (newPosition, currentX, currentZ) => {
-            updateUserPosition(newPosition, currentX, currentZ, OBSTACLES)
-        }
-    })
-
     useEffect(() => {
-        const storedUsername = localStorage.getItem('username') ?? username
-        if (storedUsername) {
-            const { channel, interval } = initializeUser(
-                storedUsername,
-                OBSTACLES,
-                GRID_WIDTH,
-                GRID_HEIGHT
-            )
+        // Only initialize if userId is empty (meaning we haven't initialized yet)
+        if (!userId) {
+            const storedUsername = localStorage.getItem('username') ?? username
+            if (storedUsername) {
+                const { channel } = initializeUser(
+                    storedUsername,
+                    OBSTACLES,
+                    GRID_WIDTH,
+                    GRID_HEIGHT
+                )
 
-            return () => {
-                clearInterval(interval)
-                void channel.unsubscribe()
+                return () => {
+                    void channel.unsubscribe()
+                }
             }
         }
-    }, [username, initializeUser])
+    }, [username, initializeUser, userId])
 
     useEffect(() => {
         if (path.length === 0 || !isMoving) return

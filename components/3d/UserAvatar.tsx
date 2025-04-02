@@ -36,7 +36,7 @@ export const UserAvatar: React.FC<UserAvatarProps> = ({
                 anchorX="center"
                 anchorY="middle"
             >
-                {username} {isCurrentUser ? '(You)' : ''}
+                {username} {isCurrentUser ? '🚀' : ''}
             </Text>
         </group>
     )
