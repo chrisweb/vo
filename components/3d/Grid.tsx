@@ -27,7 +27,7 @@ export const Grid: React.FC<GridProps> = ({
             <ClickableGrid onCellClick={onCellClick} />
 
             {/* custom grid with cell lines */}
-            <group position={[width / 2 - 0.5, 0, height / 2 - 0.5]}>
+            <group position={[width / 2, 0, height / 2]}>
                 <gridHelper
                     args={[width, width, '#444', '#222']}
                     position={[0, 0, 0]}
@@ -38,7 +38,7 @@ export const Grid: React.FC<GridProps> = ({
             {/* ground */}
             <mesh
                 rotation={[-Math.PI / 2, 0, 0]}
-                position={[width / 2 - 0.5, -0.01, height / 2 - 0.5]}
+                position={[width / 2, -0.01, height / 2]}
                 receiveShadow
             >
                 <planeGeometry args={[width, height]} />
@@ -130,6 +130,7 @@ export function ClickableGrid(
             const intersects = raycaster.intersectObjects(scene.children, true)
 
             for (const intersect of intersects) {
+                console.log(intersect.object.type, intersect.object.position.y)
                 if (
                     intersect.object.type === 'Mesh' &&
                     intersect.object.position.y === 0
