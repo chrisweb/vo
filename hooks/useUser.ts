@@ -59,6 +59,7 @@ export const useUser = () => {
                 const z = Math.floor(Math.random() * gridHeight)
                 randomCell = { x, z }
 
+                // TODO: update needed, this code should get handled by pathfinding.js
                 // check if cell is occupied or has an obstacle
                 const cellKey = cellToString(randomCell)
                 const isObstacle = obstacles.some(obs =>
