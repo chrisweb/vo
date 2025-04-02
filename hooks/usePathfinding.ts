@@ -3,14 +3,14 @@
 import { useCallback, useEffect, useState, useMemo } from 'react'
 import { Vector3 } from 'three'
 import PF from 'pathfinding'
+import { GridCell, GridPath, positionToGridCell, stringToCell } from '@/helpers/grid'
 
 interface PathfindingHelperProps {
+    // cells in the x direction (0 to gridWidth-1)
     gridWidth: number
+    // cells in the z direction (0 to gridHeight-1)
     gridHeight: number
-    obstacles: {
-        x: number
-        z: number
-    }[]
+    obstacles: GridCell[]
     occupiedCells: Set<string>
     userPosition: {
         x: number
@@ -28,19 +28,19 @@ export const usePathfinding = ({
 
     const [gridState, setGridState] = useState<PF.Grid | null>(null)
     const [finderState, setFinderState] = useState<PF.AStarFinder | null>(null)
-    const [targetCell, setTargetCell] = useState<[number, number] | null>(null)
-    const [path, setPath] = useState<number[][]>([])
+    const [targetCell, setTargetCell] = useState<GridCell | null>(null)
+    const [path, setPath] = useState<GridPath>([])
     const [isMoving, setIsMoving] = useState(false)
     const position = useMemo(() => new Vector3(userPosition.x, 0, userPosition.z), [userPosition.x, userPosition.z])
+    const userGridCell = useMemo(() => positionToGridCell(position), [position])
 
-    // pathfinding grid and finder
     useEffect(() => {
-
+        // grid dimensions (0 to width-1, 0 to height-1)
         const grid = new PF.Grid(gridWidth, gridHeight)
 
         // mark obstacles as unwalkable
         obstacles.forEach((obstacle) => {
-            // boundary check to prevent accessing out-of-bounds cells
+            // prevent accessing out-of-bounds cells
             if (obstacle.x >= 0 && obstacle.x < gridWidth &&
                 obstacle.z >= 0 && obstacle.z < gridHeight) {
                 grid.setWalkableAt(obstacle.x, obstacle.z, false)
@@ -49,100 +49,70 @@ export const usePathfinding = ({
             }
         })
 
+        // mark cells occupied by other users as unwalkable
+        occupiedCells.forEach((occupiedCell) => {
+            const cell = stringToCell(occupiedCell)
+            if (cell.x >= 0 && cell.x < grid.width &&
+                cell.z >= 0 && cell.z < grid.height) {
+                grid.setWalkableAt(cell.x, cell.z, false)
+            }
+        })
+
         setGridState(grid)
 
-        // create a new pathfinder with compatible options
+        // new pathfinder with diagonal movement disabled
         const newFinder = new PF.AStarFinder({
             diagonalMovement: PF.DiagonalMovement.Never,
         })
 
         setFinderState(newFinder)
-
-    }, [gridWidth, gridHeight, obstacles])
+    }, [gridWidth, gridHeight, obstacles, occupiedCells])
 
     const findPath = useCallback((
-        startX: number,
-        startZ: number,
-        targetX: number,
-        targetZ: number,
-    ) => {
+        startCell: GridCell,
+        targetCell: GridCell,
+    ): GridPath => {
         if (!gridState || !finderState) return []
 
         // if cells are the same, return empty path
-        if (startX === targetX && startZ === targetZ) return []
+        if (startCell.x === targetCell.x && startCell.z === targetCell.z) return []
 
-        // if target cell has an obstacle, return empty path
-        const isTargetObstacle = obstacles.some(obs =>
-            obs.x === targetX && obs.z === targetZ
-        )
-        if (isTargetObstacle) return []
-
-        // if target cell is occupied by another user, return empty path
-        const targetCellKey = `${targetX.toString()},${targetZ.toString()}`
-        const isOccupiedByUser = occupiedCells.has(targetCellKey) &&
-            !(targetX === Math.floor(position.x) &&
-                targetZ === Math.floor(position.z))
-
-        if (isOccupiedByUser) return []
-
-        // clone the grid to avoid modifying the original
-        const gridClone = gridState.clone()
-
-        // mark cells occupied by other users as unwalkable
-        occupiedCells.forEach((cell) => {
-            const [x, z] = cell.split(',').map(Number)
-            // skip current user position
-            const isCurrentUserPos = x === Math.floor(position.x) &&
-                z === Math.floor(position.z)
-
-            if (!isCurrentUserPos && x >= 0 && x < gridClone.width && z >= 0 && z < gridClone.height) {
-                gridClone.setWalkableAt(x, z, false)
-            }
-        })
-
-        // check if target is walkable
-        if (targetX >= 0 && targetX < gridClone.width && targetZ >= 0 && targetZ < gridClone.height) {
-            gridClone.setWalkableAt(targetX, targetZ, true)
-        }
-
-        // Find path
-        const pfPath = finderState.findPath(
-            startX,
-            startZ,
-            targetX,
-            targetZ,
-            gridClone,
+        // path using the pathfinding library
+        const path = finderState.findPath(
+            startCell.x,
+            startCell.z,
+            targetCell.x,
+            targetCell.z,
+            gridState,
         )
 
-        // convert path format and remove the starting position
-        return pfPath.slice(1).map(point => [point[0], point[1]])
-
-    }, [gridState, finderState, obstacles, occupiedCells, position])
+        // convert to GridCell format and remove the starting position
+        return path.slice(1).map(point => ({ x: point[0], z: point[1] }))
+    }, [gridState, finderState])
 
     const handleGridClick = useCallback(
         (x: number, z: number) => {
 
-            // check if target cell has an obstacle
-            if (!gridState?.isWalkableAt(x, z)) return
+            if (!gridState) return
+
+            // object for the clicked position
+            const clickedCell: GridCell = { x, z }
+
+            // make sure the target cell is walkable
+            if (!gridState.isWalkableAt(x, z)) return
 
             // check if target cell is user's current position
-            const userX = Math.floor(userPosition.x)
-            const userZ = Math.floor(userPosition.z)
-            if (x === userX && z === userZ) return
+            if (x === userGridCell.x && z === userGridCell.z) return
 
-            const startX = Math.floor(userPosition.x)
-            const startZ = Math.floor(userPosition.z)
+            const path = findPath(userGridCell, clickedCell)
 
-            // find path to target using pathfinding.js
-            const newPath = findPath(startX, startZ, x, z)
-
-            if (newPath.length > 0) {
-                setTargetCell([x, z])
-                setPath(newPath)
+            if (path.length > 0) {
+                setTargetCell(clickedCell)
+                setPath(path)
                 setIsMoving(true)
             }
         },
-        [userPosition, isMoving, findPath, obstacles]
+        [userGridCell, gridState, findPath]
     )
 
     return {
