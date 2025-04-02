@@ -9,7 +9,10 @@
         "javascript",
         "javascriptreact",
         "typescript",
-        "typescriptreact"
+        "typescriptreact",
+        "markdown",
+        "json",
+        "jsonc",
     ],
     "eslint.onIgnoredFiles": "warn",
     "eslint.probe": [
@@ -17,7 +20,11 @@
         "javascriptreact",
         "typescript",
         "typescriptreact",
-        "html",
+        "markdown",
+        "json",
+        "jsonc"
     ],
-	"editor.detectIndentation": false,
+    "editor.detectIndentation": false,
+    "eslint.format.enable": true,
+    "editor.defaultFormatter": "dbaeumer.vscode-eslint",
 }
