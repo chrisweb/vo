@@ -5,6 +5,7 @@ import { Vector3 } from 'three'
 import { supabase } from '@/utils/supabase'
 import { REALTIME_LISTEN_TYPES, type RealtimeChannel } from '@supabase/supabase-js'
 import { GridCell, cellToString, positionToGridCell, gridCellToPosition } from '@/helpers/grid'
+import { v4 as uuidv4 } from 'uuid'
 
 export interface UserData {
     id: string
@@ -82,7 +83,7 @@ export const useUser = () => {
         gridHeight: number
     ) => {
 
-        const newUserId = Math.random().toString(36).substring(2, 9)
+        const newUserId = uuidv4()
         setUserId(newUserId)
 
         const randomPosition = getRandomCellPosition([], obstacles, gridWidth, gridHeight)
@@ -165,7 +166,6 @@ export const useUser = () => {
         newPosition: Vector3,
         currentX: number,
         currentZ: number,
-        obstacles: GridCell[]
     ) => {
         // Get new grid cell
         const newCell = positionToGridCell(newPosition)
@@ -176,15 +176,7 @@ export const useUser = () => {
         // update occupied cells
         setOccupiedCells((prev) => {
             const newSet = new Set(prev)
-            // remove old cell if it's not an obstacle
-            if (
-                !obstacles.some(obs =>
-                    obs.x === currentCell.x && obs.z === currentCell.z
-                )
-            ) {
-                newSet.delete(cellToString(currentCell))
-            }
-            // add new cell
+            newSet.delete(cellToString(currentCell))
             newSet.add(cellToString(newCell))
             return newSet
         })

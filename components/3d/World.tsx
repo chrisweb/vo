@@ -99,7 +99,6 @@ const World: React.FC<WorldProps> = ({ username }) => {
                 new Vector3(nextPosition.x, nextPosition.y, nextPosition.z),
                 currentCell.x,
                 currentCell.z,
-                OBSTACLES
             )
 
             setPath(newPath)
