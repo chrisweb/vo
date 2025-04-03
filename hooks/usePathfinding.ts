@@ -28,9 +28,10 @@ export const usePathfinding = ({
 
     const [gridState, setGridState] = useState<PF.Grid | null>(null)
     const [finderState, setFinderState] = useState<PF.AStarFinder | null>(null)
-    const [targetCell, setTargetCell] = useState<GridCell | null>(null)
-    const [path, setPath] = useState<GridPath>([])
-    const [isMoving, setIsMoving] = useState(false)
+    const [targetCellState, setTargetCellState] = useState<GridCell | null>(null)
+    const [pathState, setPathState] = useState<GridPath>([])
+    const [isMovingState, setIsMovingState] = useState(false)
+
     const position = useMemo(() => new Vector3(userPosition.x, 0, userPosition.z), [userPosition.x, userPosition.z])
     const userGridCell = useMemo(() => positionToGridCell(position), [position])
 
@@ -107,21 +108,21 @@ export const usePathfinding = ({
             const path = findPath(userGridCell, clickedCell)
 
             if (path.length > 0) {
-                setTargetCell(clickedCell)
-                setPath(path)
-                setIsMoving(true)
+                setTargetCellState(clickedCell)
+                setPathState(path)
+                setIsMovingState(true)
             }
         },
         [userGridCell, gridState, findPath]
     )
 
     return {
-        targetCell,
-        path,
-        isMoving,
-        setPath,
-        setIsMoving,
-        setTargetCell,
+        targetCellState,
+        pathState,
+        isMovingState,
+        setPathState,
+        setIsMovingState,
+        setTargetCellState,
         handleGridClick
     }
 }

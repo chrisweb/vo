@@ -34,9 +34,9 @@ const World: React.FC<WorldProps> = ({ username }) => {
 
     // user
     const {
-        position,
-        users,
-        userId,
+        positionState,
+        usersState,
+        userIdState,
         occupiedCells,
         initializeUser,
         updateUserPosition
@@ -44,12 +44,12 @@ const World: React.FC<WorldProps> = ({ username }) => {
 
     // pathfinding
     const {
-        targetCell,
-        path,
-        isMoving,
-        setPath,
-        setIsMoving,
-        setTargetCell,
+        targetCellState,
+        pathState,
+        isMovingState,
+        setPathState,
+        setIsMovingState,
+        setTargetCellState,
         handleGridClick
     } = usePathfinding({
         gridWidth: GRID_WIDTH,
@@ -57,14 +57,14 @@ const World: React.FC<WorldProps> = ({ username }) => {
         obstacles: OBSTACLES,
         occupiedCells,
         userPosition: {
-            x: position.x,
-            z: position.z
+            x: positionState.x,
+            z: positionState.z
         }
     })
 
     useEffect(() => {
-        // only initialize if userId is empty (meaning we haven't initialized yet)
-        if (!userId) {
+        // check if we have already initialized else initialize user
+        if (!userIdState) {
             const storedUsername = localStorage.getItem('username') ?? username
             if (storedUsername) {
                 const { channel } = initializeUser(
@@ -79,23 +79,23 @@ const World: React.FC<WorldProps> = ({ username }) => {
                 }
             }
         }
-    }, [username, initializeUser, userId])
+    }, [username, initializeUser, userIdState])
 
     useEffect(() => {
-        if (path.length === 0 || !isMoving) return
+        if (pathState.length === 0 || !isMovingState) return
 
         const moveAlongPath = () => {
-            const nextCell = path[0]
-            const newPath = path.slice(1)
+            const nextCell = pathState[0]
+            const newPath = pathState.slice(1)
 
             // get current grid cell from position
-            const currentCell = positionToGridCell(position)
+            const currentCell = positionToGridCell(positionState)
 
             // convert next grid cell to world position
             const nextPosition = gridCellToPosition(nextCell)
 
-            console.log('Moving user to position:', nextPosition, 'from cell', currentCell, 'to cell', nextCell);
-            
+            console.log('Moving user to position:', nextPosition, 'from cell', currentCell, 'to cell', nextCell)
+
             // update user position to the center of the next cell
             updateUserPosition(
                 new Vector3(nextPosition.x, nextPosition.y, nextPosition.z),
@@ -103,12 +103,12 @@ const World: React.FC<WorldProps> = ({ username }) => {
                 currentCell.z,
             )
 
-            setPath(newPath)
+            setPathState(newPath)
 
             // check if we've reached the target
             if (newPath.length === 0) {
-                setIsMoving(false)
-                setTargetCell(null)
+                setIsMovingState(false)
+                setTargetCellState(null)
             }
         }
 
@@ -119,7 +119,7 @@ const World: React.FC<WorldProps> = ({ username }) => {
             clearTimeout(timer)
         }
 
-    }, [path, isMoving, position, updateUserPosition, setPath, setIsMoving, setTargetCell])
+    }, [pathState, isMovingState, positionState, updateUserPosition, setPathState, setIsMovingState, setTargetCellState])
 
     return (
         <>
@@ -129,22 +129,22 @@ const World: React.FC<WorldProps> = ({ username }) => {
                 onCellClick={handleGridClick}
                 occupiedCells={occupiedCells}
                 obstacles={OBSTACLES}
-                targetCell={targetCell}
-                path={path}
+                targetCell={targetCellState}
+                path={pathState}
             />
             <Obstacles obstacles={OBSTACLES} />
             {/* current user */}
             <UserAvatar
-                x={position.x}
-                y={position.y}
-                z={position.z}
+                x={positionState.x}
+                y={positionState.y}
+                z={positionState.z}
                 username={username}
                 color="#3498db"
                 isCurrentUser={true}
             />
             {/* other users */}
-            {users
-                .filter(user => user.id !== userId)
+            {usersState
+                .filter(user => user.id !== userIdState)
                 .map((user, index) => (
                     <UserAvatar
                         key={user.id || index}

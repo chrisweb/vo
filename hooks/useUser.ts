@@ -32,14 +32,11 @@ interface PayloadData {
 
 export const useUser = () => {
 
-    const [position, setPosition] = useState<Vector3>(
-        new Vector3(0, 0, 0)
-    )
-
-    const [users, setUsers] = useState<UserData[]>([])
-    const [userId, setUserId] = useState('')
+    const [positionState, setPositionState] = useState<Vector3>(new Vector3(0, 0, 0))
+    const [usersState, setUsersState] = useState<UserData[]>([])
+    const [userIdState, setUserIdState] = useState('')
     const [channelState, setChannelState] = useState<RealtimeChannel | null>(null)
-    const [lastBroadcastedPosition, setLastBroadcastedPosition] = useState<Vector3 | null>(null)
+    const [lastBroadcastedPositionState, setLastBroadcastedPositionState] = useState<Vector3 | null>(null)
 
     // using set instead of array (as we don't want to have duplicates anyway)
     // sets are much faster for lookups than arrays
@@ -96,12 +93,12 @@ export const useUser = () => {
     ) => {
 
         const newUserId = uuidv4()
-        setUserId(newUserId)
+        setUserIdState(newUserId)
 
         const randomPosition = getRandomCellPosition([], obstacles, gridWidth, gridHeight)
 
-        setPosition(randomPosition)
-        setLastBroadcastedPosition(randomPosition)
+        setPositionState(randomPosition)
+        setLastBroadcastedPositionState(randomPosition)
 
         const newUser: UserData = {
             id: newUserId,
@@ -109,7 +106,7 @@ export const useUser = () => {
             position: randomPosition,
         }
 
-        setUsers(currentUsers => [...currentUsers, newUser])
+        setUsersState(currentUsers => [...currentUsers, newUser])
 
         const cell = positionToGridCell(randomPosition)
         const cellKey = cellToString(cell)
@@ -164,12 +161,12 @@ export const useUser = () => {
         channel.on(REALTIME_LISTEN_TYPES.PRESENCE, { event: REALTIME_PRESENCE_LISTEN_EVENTS.LEAVE }, ({ key }) => {
             console.log(`User ${key} left`)
             // remove user who left
-            setUsers(prev => prev.filter(user => user.id !== key))
+            setUsersState(prev => prev.filter(user => user.id !== key))
 
             // clean up occupied cells when a user leaves
             setOccupiedCells((prev) => {
                 const newSet = new Set(prev)
-                const userLeaving = users.find(user => user.id === key)
+                const userLeaving = usersState.find(user => user.id === key)
                 if (userLeaving) {
                     const cell = positionToGridCell(userLeaving.position)
                     newSet.delete(cellToString(cell))
@@ -184,7 +181,7 @@ export const useUser = () => {
 
             const position = deserializeVector3(payload.payload.position)
 
-            setUsers((prev) => {
+            setUsersState((prev) => {
                 // update user position if they exist, else insert new position
                 const userExists = prev.some(user =>
                     user.id === payload.payload.id
@@ -255,7 +252,7 @@ export const useUser = () => {
         setChannelState(channel)
 
         return { channel: channel }
-    }, [getRandomCellPosition, channelState, users])
+    }, [getRandomCellPosition, channelState, usersState])
 
     // update user position when moving
     const updateUserPosition = useCallback((
@@ -277,59 +274,60 @@ export const useUser = () => {
             return newSet
         })
 
-        setPosition(newPosition)
+        setPositionState(newPosition)
     }, [])
 
     // broadcast position updates only when position changes
     useEffect(() => {
-        if (!channelState || !userId || !lastBroadcastedPosition) return
+        if (!channelState || !userIdState || !lastBroadcastedPositionState) return
 
         // check if position has changed since last broadcast
-        if (position.x !== lastBroadcastedPosition.x ||
-            position.y !== lastBroadcastedPosition.y ||
-            position.z !== lastBroadcastedPosition.z) {
-
-            const currentUser = users.find(user => user.id === userId)
-            if (!currentUser) return
-
-            // serialize the position for transmission
-            const serializedPosition = serializeVector3(position)
-
-            const userData = {
-                id: userId,
-                username: currentUser.username,
-                position: serializedPosition
-            }
-
-            // update presence with new position
-            void channelState.track({
-                username: currentUser.username,
-                position: serializedPosition
-            }).catch((error: unknown) => {
-                console.error('Failed to update presence', error)
-            })
-
-            // broadcast position update to all users
-            channelState.send({
-                type: 'broadcast',
-                event: 'position',
-                payload: userData
-            }).catch((error: unknown) => {
-                console.error('Failed to send position update', error)
-                return
-            })
-
-            console.log('Broadcasting position update:', userData);
-            setLastBroadcastedPosition(position.clone())
+        if (positionState === lastBroadcastedPositionState) {
+            return
         }
-    }, [channelState, userId, position, lastBroadcastedPosition, users])
+
+        const currentUser = usersState.find(user => user.id === userIdState)
+        if (!currentUser) return
+
+        // serialize the position for transmission
+        const serializedPosition = serializeVector3(positionState)
+
+        const userData = {
+            id: userIdState,
+            username: currentUser.username,
+            position: serializedPosition
+        }
+
+        // update presence with new position
+        /*void channelState.track({
+            username: currentUser.username,
+            position: serializedPosition
+        }).catch((error: unknown) => {
+            console.error('Failed to update presence', error)
+        })*/
+
+        // broadcast position update to all users
+        channelState.send({
+            type: 'broadcast',
+            event: 'position',
+            payload: userData
+        }).catch((error: unknown) => {
+            console.error('Failed to send position update', error)
+            return
+        })
+
+        console.log('Broadcasting position update:', userData)
+
+        setLastBroadcastedPositionState(positionState)
+
+    }, [channelState, userIdState, positionState, lastBroadcastedPositionState, usersState])
 
     return {
-        position,
-        users,
-        userId,
+        positionState,
+        usersState,
+        userIdState,
         occupiedCells,
-        setPosition,
+        setPositionState,
         getRandomCellPosition,
         initializeUser,
         updateUserPosition
