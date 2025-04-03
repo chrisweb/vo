@@ -2,8 +2,8 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import { Vector3 } from 'three'
-import { supabase } from '@/utils/supabase'
-import { REALTIME_LISTEN_TYPES, REALTIME_PRESENCE_LISTEN_EVENTS, type RealtimeChannel } from '@supabase/supabase-js'
+import { supabaseClient } from '@/utils/supabase'
+import { REALTIME_LISTEN_TYPES, REALTIME_SUBSCRIBE_STATES, type RealtimeChannel } from '@supabase/supabase-js'
 import { GridCell, cellToString, positionToGridCell, gridCellToPosition } from '@/helpers/grid'
 import { v4 as uuidv4 } from 'uuid'
 import { serializeVector3, deserializeVector3 } from '@/helpers/vector'
@@ -118,7 +118,7 @@ export const useUser = () => {
         })
 
         // create a channel with a specific room ID to ensure all users connect to the same space
-        const channel = supabase.channel('virtual-world', {
+        const channel = supabaseClient.channel('virtual-world', {
             config: {
                 presence: {
                     key: newUserId,
@@ -129,55 +129,58 @@ export const useUser = () => {
             }
         })
 
-        // presence state changes for all users
-        channel.on(REALTIME_LISTEN_TYPES.PRESENCE, { event: REALTIME_PRESENCE_LISTEN_EVENTS.SYNC }, () => {
-            const state = channel.presenceState()
-            console.log('Current presence state:', state)
-        })
+        console.log('Channel created:', channel)
 
-        // users joining
-        channel.on(REALTIME_LISTEN_TYPES.PRESENCE, { event: REALTIME_PRESENCE_LISTEN_EVENTS.JOIN }, ({ key }) => {
-            console.log(`User ${key} joined`)
+        channel.subscribe((status, error) => {
 
-            // ask new users to share their position by broadcasting our position
-            if (channelState) {
-                const currentUserData = {
-                    id: newUserId,
-                    username,
+            console.log('Channel subscription status:', status)
+            console.log('error:', error)
+
+            if (status === REALTIME_SUBSCRIBE_STATES.SUBSCRIBED) {
+
+                console.log('Successfully subscribed to channel')
+
+                setChannelState(channel)
+
+                // Track presence to keep the connection alive
+                const presenceData = {
+                    username: username,
                     position: serializeVector3(randomPosition)
                 }
 
-                channel.send({
-                    type: 'broadcast',
-                    event: 'position',
-                    payload: currentUserData
+                channel.track(presenceData).then(() => {
+                    console.log('Presence tracked successfully')
+
+                    console.log('// Broadcast initial position to all users')
+                    channel.send({
+                        type: 'broadcast',
+                        event: 'position',
+                        payload: {
+                            id: newUserId,
+                            username,
+                            position: serializeVector3(randomPosition)
+                        }
+                    }).catch((error: unknown) => {
+                        console.error('Failed to send initial position', error)
+                    })
                 }).catch((error: unknown) => {
-                    console.error('Failed to send initial position to new user', error)
+                    console.error('Failed to track presence', error)
                 })
+            } else if (status === REALTIME_SUBSCRIBE_STATES.CLOSED) {
+                console.error('Channel closed unexpectedly')
+                setChannelState(null)
+            } else if (status === REALTIME_SUBSCRIBE_STATES.CHANNEL_ERROR) {
+                console.error('Channel error occurred')
+            // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+            } else if (status === REALTIME_SUBSCRIBE_STATES.TIMED_OUT) {
+                console.error('Channel subscription timed out')
             }
-        })
-
-        // users leaving
-        channel.on(REALTIME_LISTEN_TYPES.PRESENCE, { event: REALTIME_PRESENCE_LISTEN_EVENTS.LEAVE }, ({ key }) => {
-            console.log(`User ${key} left`)
-            // remove user who left
-            setUsersState(prev => prev.filter(user => user.id !== key))
-
-            // clean up occupied cells when a user leaves
-            setOccupiedCells((prev) => {
-                const newSet = new Set(prev)
-                const userLeaving = usersState.find(user => user.id === key)
-                if (userLeaving) {
-                    const cell = positionToGridCell(userLeaving.position)
-                    newSet.delete(cellToString(cell))
-                }
-                return newSet
-            })
         })
 
         // @ts-ignore types problem
         channel.on(REALTIME_LISTEN_TYPES.BROADCAST, { event: 'position' }, (payload: PayloadData) => {
-            console.log('Received position update:', payload)
+
+            console.log('####### Received position update:', payload)
 
             const position = deserializeVector3(payload.payload.position)
 
@@ -216,43 +219,64 @@ export const useUser = () => {
             })
         })
 
-        channel.subscribe((status: 'SUBSCRIBED' | 'TIMED_OUT' | 'CLOSED' | 'CHANNEL_ERROR') => {
-            if (status === 'SUBSCRIBED') {
-                console.log('Successfully subscribed to channel')
+        // presence state changes for all users
+        channel.on(REALTIME_LISTEN_TYPES.PRESENCE, { event: 'sync' }, () => {
+            const state = channel.presenceState()
+            console.log('Current presence state:', state)
+        })
 
-                // update presence with user data
-                const presenceData = {
-                    username: username,
+        // users joining
+        channel.on(REALTIME_LISTEN_TYPES.PRESENCE, { event: 'join' }, ({ key, newPresences }) => {
+            console.log(`User ${key} joined`, newPresences)
+
+            // ask new users to share their position by broadcasting our position
+            if (userIdState) {
+                const currentUserData = {
+                    id: newUserId,
+                    username,
                     position: serializeVector3(randomPosition)
                 }
 
-                channel.track(presenceData).then(() => {
-                    console.log('Presence tracked successfully')
-                }).catch((error: unknown) => {
-                    console.error('Failed to track presence', error)
-                })
-
-                // broadcast initial position to all users with serialized position
                 channel.send({
                     type: 'broadcast',
                     event: 'position',
-                    payload: {
-                        id: newUserId,
-                        username,
-                        position: serializeVector3(randomPosition)
-                    }
+                    payload: currentUserData
                 }).catch((error: unknown) => {
-                    console.error('Failed to send position update', error)
+                    console.error('Failed to send initial position to new user', error)
                 })
-            } else {
-                console.warn('Channel subscription status:', status)
             }
         })
 
-        setChannelState(channel)
+        // users leaving
+        channel.on(REALTIME_LISTEN_TYPES.PRESENCE, { event: 'leave' }, ({ key, leftPresences }) => {
+            console.log(`User ${key} left`, leftPresences)
+            // remove user who left
+            setUsersState(prev => prev.filter(user => user.id !== key))
+
+            // clean up occupied cells when a user leaves
+            setOccupiedCells((prev) => {
+                const newSet = new Set(prev)
+                const userLeaving = usersState.find(user => user.id === key)
+                if (userLeaving) {
+                    const cell = positionToGridCell(userLeaving.position)
+                    newSet.delete(cellToString(cell))
+                }
+                return newSet
+            })
+        })
 
         return { channel: channel }
-    }, [getRandomCellPosition, channelState, usersState])
+
+    }, [getRandomCellPosition, userIdState, usersState])
+
+    const unsubscribeUser = useCallback(() => {
+        if (channelState) {
+            supabaseClient.removeChannel(channelState).catch((error: unknown) => {
+                console.error('Failed to remove channel', error)
+            })
+            setChannelState(null)
+        }
+    }, [channelState])
 
     // update user position when moving
     const updateUserPosition = useCallback((
@@ -298,14 +322,6 @@ export const useUser = () => {
             position: serializedPosition
         }
 
-        // update presence with new position
-        /*void channelState.track({
-            username: currentUser.username,
-            position: serializedPosition
-        }).catch((error: unknown) => {
-            console.error('Failed to update presence', error)
-        })*/
-
         // broadcast position update to all users
         channelState.send({
             type: 'broadcast',
@@ -330,6 +346,7 @@ export const useUser = () => {
         setPositionState,
         getRandomCellPosition,
         initializeUser,
+        unsubscribeUser,
         updateUserPosition
     }
 }

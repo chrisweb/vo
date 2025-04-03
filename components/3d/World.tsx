@@ -39,6 +39,7 @@ const World: React.FC<WorldProps> = ({ username }) => {
         userIdState,
         occupiedCells,
         initializeUser,
+        unsubscribeUser,
         updateUserPosition
     } = useUser()
 
@@ -67,18 +68,19 @@ const World: React.FC<WorldProps> = ({ username }) => {
         if (!userIdState) {
             const storedUsername = localStorage.getItem('username') ?? username
             if (storedUsername) {
-                const { channel } = initializeUser(
+                initializeUser(
                     storedUsername,
                     OBSTACLES,
                     GRID_WIDTH,
                     GRID_HEIGHT
                 )
-
-                return () => {
-                    void channel.unsubscribe()
-                }
             }
         }
+
+        return () => {
+            unsubscribeUser()
+        }
+
     }, [username, initializeUser, userIdState])
 
     useEffect(() => {
