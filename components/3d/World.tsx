@@ -39,8 +39,7 @@ const World: React.FC<WorldProps> = ({ username }) => {
         userIdState,
         occupiedCells,
         initializeUser,
-        unsubscribeUser,
-        updateUserPosition
+        updateUserPosition,
     } = useUser()
 
     // pathfinding
@@ -64,24 +63,17 @@ const World: React.FC<WorldProps> = ({ username }) => {
     })
 
     useEffect(() => {
-        // check if we have already initialized else initialize user
-        if (!userIdState) {
-            const storedUsername = localStorage.getItem('username') ?? username
-            if (storedUsername) {
-                initializeUser(
-                    storedUsername,
-                    OBSTACLES,
-                    GRID_WIDTH,
-                    GRID_HEIGHT
-                )
-            }
-        }
 
-        return () => {
-            unsubscribeUser()
-        }
+        const storedUsername = localStorage.getItem('username') ?? ''
 
-    }, [username, initializeUser, userIdState])
+        initializeUser(
+            storedUsername,
+            OBSTACLES,
+            GRID_WIDTH,
+            GRID_HEIGHT
+        )
+
+    }, [initializeUser])
 
     useEffect(() => {
         if (pathState.length === 0 || !isMovingState) return

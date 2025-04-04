@@ -35,12 +35,14 @@ interface PayloadData {
     payload: SerializedUserData
 }
 
+const newUserId = uuidv4()
+
 export const useUser = () => {
 
     const [positionState, setPositionState] = useState<Vector3>(new Vector3(0, 0, 0))
     const [presencesState, setPresencesState] = useState<PresenceData[]>([])
     const [usersState, setUsersState] = useState<UserData[]>([])
-    const [userIdState, setUserIdState] = useState('')
+    const [userIdState, setUserIdState] = useState<string | null>(null)
     const [channelState, setChannelState] = useState<RealtimeChannel | null>(null)
     const [lastBroadcastedPositionState, setLastBroadcastedPositionState] = useState<Vector3 | null>(null)
 
@@ -98,7 +100,8 @@ export const useUser = () => {
         gridHeight: number
     ) => {
 
-        const newUserId = uuidv4()
+        if (userIdState) return
+
         setUserIdState(newUserId)
 
         const randomPosition = getRandomCellPosition([], obstacles, gridWidth, gridHeight)
@@ -139,7 +142,7 @@ export const useUser = () => {
 
         channel.subscribe((status, error) => {
 
-            console.log('Channel subscription status:', status)
+            console.log('Channel subscription status update:', status)
             console.log('error:', error)
 
             if (status === REALTIME_SUBSCRIBE_STATES.SUBSCRIBED) {
@@ -373,8 +376,6 @@ export const useUser = () => {
         userIdState,
         occupiedCells,
         presencesState,
-        setPositionState,
-        getRandomCellPosition,
         initializeUser,
         unsubscribeUser,
         updateUserPosition
