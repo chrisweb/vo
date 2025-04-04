@@ -8,6 +8,11 @@ import { GridCell, cellToString, positionToGridCell, gridCellToPosition } from '
 import { v4 as uuidv4 } from 'uuid'
 import { serializeVector3, deserializeVector3 } from '@/helpers/vector'
 
+export interface PresenceData {
+    id: string
+    username: string
+}
+
 export interface UserData {
     id: string
     username: string
@@ -33,6 +38,7 @@ interface PayloadData {
 export const useUser = () => {
 
     const [positionState, setPositionState] = useState<Vector3>(new Vector3(0, 0, 0))
+    const [presencesState, setPresencesState] = useState<PresenceData[]>([])
     const [usersState, setUsersState] = useState<UserData[]>([])
     const [userIdState, setUserIdState] = useState('')
     const [channelState, setChannelState] = useState<RealtimeChannel | null>(null)
@@ -145,7 +151,7 @@ export const useUser = () => {
                 // Track presence to keep the connection alive
                 const presenceData = {
                     username: username,
-                    position: serializeVector3(randomPosition)
+                    id: newUserId,
                 }
 
                 channel.track(presenceData).then(() => {
@@ -167,7 +173,7 @@ export const useUser = () => {
                     console.error('Failed to track presence', error)
                 })
             } else if (status === REALTIME_SUBSCRIBE_STATES.CLOSED) {
-                console.error('Channel closed unexpectedly')
+                console.log('Channel closed unexpectedly')
                 setChannelState(null)
             } else if (status === REALTIME_SUBSCRIBE_STATES.CHANNEL_ERROR) {
                 console.error('Channel error occurred')
@@ -229,12 +235,31 @@ export const useUser = () => {
         channel.on(REALTIME_LISTEN_TYPES.PRESENCE, { event: 'join' }, ({ key, newPresences }) => {
             console.log(`User ${key} joined`, newPresences)
 
-            // ask new users to share their position by broadcasting our position
+            newPresences.forEach((presence) => {
+
+                setPresencesState((prev) => {
+
+                    const userExists = prev.some(user => user.id === presence.id)
+
+                    if (!userExists) {
+                        return [...prev, {
+                            id: String(presence.id),
+                            username: String(presence.username),
+                        }]
+                    } else {
+                        return prev
+                    }
+
+                })
+
+            })
+
+            // on new presence, we share position with them
             if (userIdState) {
                 const currentUserData = {
                     id: newUserId,
                     username,
-                    position: serializeVector3(randomPosition)
+                    position: serializeVector3(positionState),
                 }
 
                 channel.send({
@@ -253,6 +278,10 @@ export const useUser = () => {
             // remove user who left
             setUsersState(prev => prev.filter(user => user.id !== key))
 
+            setPresencesState((prev) => {
+                return prev.filter(user => user.id !== key)
+            })
+
             // clean up occupied cells when a user leaves
             setOccupiedCells((prev) => {
                 const newSet = new Set(prev)
@@ -267,7 +296,7 @@ export const useUser = () => {
 
         return { channel: channel }
 
-    }, [getRandomCellPosition, userIdState, usersState])
+    }, [getRandomCellPosition, userIdState, usersState, positionState])
 
     const unsubscribeUser = useCallback(() => {
         if (channelState) {
@@ -343,6 +372,7 @@ export const useUser = () => {
         usersState,
         userIdState,
         occupiedCells,
+        presencesState,
         setPositionState,
         getRandomCellPosition,
         initializeUser,
