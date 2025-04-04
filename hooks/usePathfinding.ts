@@ -35,8 +35,15 @@ export const usePathfinding = ({
     const position = useMemo(() => new Vector3(userPosition.x, 0, userPosition.z), [userPosition.x, userPosition.z])
     const userGridCell = useMemo(() => positionToGridCell(position), [position])
 
+    // 2d matrix of cells
+    /*const createGridMatrix = useCallback((gridWidth: number, gridHeight: number, walkable: number): number[][] => {
+        const matrix: number[][] = Array.from({ length: gridHeight },
+            () => Array.from({ length: gridWidth }, () => walkable))
+        return matrix
+    }, [])*/
+
     useEffect(() => {
-        // grid dimensions (0 to width-1, 0 to height-1)
+
         const grid = new PF.Grid(gridWidth, gridHeight)
 
         // mark obstacles as unwalkable

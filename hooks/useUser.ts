@@ -180,7 +180,7 @@ export const useUser = () => {
                 setChannelState(null)
             } else if (status === REALTIME_SUBSCRIBE_STATES.CHANNEL_ERROR) {
                 console.error('Channel error occurred')
-            // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+                // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
             } else if (status === REALTIME_SUBSCRIBE_STATES.TIMED_OUT) {
                 console.error('Channel subscription timed out')
             }
@@ -200,6 +200,28 @@ export const useUser = () => {
                 )
 
                 if (userExists) {
+                    // find the user's previous position before updating
+                    const previousUser = prev.find(user => user.id === payload.payload.id)
+
+                    if (previousUser) {
+                        const previousCell = positionToGridCell(previousUser.position)
+                        const previousCellKey = cellToString(previousCell)
+
+                        // update occupied cells
+                        // remove previous cell and add new cell
+                        setOccupiedCells((prevCells) => {
+                            const newSet = new Set(prevCells)
+                            newSet.delete(previousCellKey)
+
+                            const newCell = positionToGridCell(position)
+                            const newCellKey = cellToString(newCell)
+                            newSet.add(newCellKey)
+
+                            return newSet
+                        })
+                    }
+
+                    // Update the user state with new position
                     return prev.map(user =>
                         user.id === payload.payload.id ?
                             {
@@ -210,21 +232,22 @@ export const useUser = () => {
                     )
                 } else {
                     // new user joining, add them to the list
+                    // For new users, just add their position to occupied cells
+                    const cell = positionToGridCell(position)
+                    const cellKey = cellToString(cell)
+
+                    setOccupiedCells((prevCells) => {
+                        const newSet = new Set(prevCells)
+                        newSet.add(cellKey)
+                        return newSet
+                    })
+
                     return [...prev, {
                         id: payload.payload.id,
                         username: payload.payload.username,
                         position
                     }]
                 }
-            })
-
-            // update occupied cells
-            setOccupiedCells((prev) => {
-                const newSet = new Set(prev)
-                const cell = positionToGridCell(position)
-                const cellKey = cellToString(cell)
-                newSet.add(cellKey)
-                return newSet
             })
         })
 
