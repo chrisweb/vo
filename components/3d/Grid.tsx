@@ -2,6 +2,9 @@ import { useThree } from '@react-three/fiber'
 import { useEffect } from 'react'
 import { GridCell, GridPath } from '@/helpers/grid'
 
+// Static name for clickable grid cells
+const CLICKABLE_CELL_NAME = 'clickable-grid-cell'
+
 interface GridProps {
     width: number
     height: number
@@ -102,12 +105,11 @@ const GridCells: React.FC<GridCellsProps> = ({
                         key={index}
                         position={[x + 0.5, 0, z + 0.5]}
                         rotation={[-Math.PI / 2, 0, 0]}
+                        name={CLICKABLE_CELL_NAME}
                     >
                         <planeGeometry args={[0.95, 0.95]} />
                         <meshBasicMaterial
                             color={cellColor}
-                            transparent={true}
-                            opacity={isTarget || isPathCell ? 0.7 : 0.3}
                         />
                     </mesh>
                 )
@@ -130,14 +132,12 @@ export function ClickableGrid(
             const intersects = raycaster.intersectObjects(scene.children, true)
 
             for (const intersect of intersects) {
-                console.log(intersect.object.type, intersect.object.position.y)
-                if (
-                    intersect.object.type === 'Mesh' &&
-                    intersect.object.position.y === 0
-                ) {
-                    // convert click position to grid cell coordinates
+                // Check if the intersected object is a mesh with our static name
+                if (intersect.object.name === CLICKABLE_CELL_NAME) {
+                    // Get grid coordinates from mesh position
                     const x = Math.floor(intersect.object.position.x)
                     const z = Math.floor(intersect.object.position.z)
+                    console.log(`Clicked cell at grid coordinates: (${x.toString()}, ${z.toString()} with name ${intersect.object.name})`)
                     onCellClick(x, z)
                     break
                 }
