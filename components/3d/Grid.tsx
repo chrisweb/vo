@@ -93,7 +93,7 @@ const GridCells: React.FC<GridCellsProps> = ({
                 const isPathCell = path.some(cell => cell.x === x && cell.z === z)
 
                 // cell color based on state
-                let cellColor = '#e9e9e9'
+                let cellColor = '#b8b8b8' // default floor color
                 if (isTarget) cellColor = '#2563eb'
                 else if (isPathCell) cellColor = '#6280b2'
                 else if (isObstacle) cellColor = '#7c2d12'

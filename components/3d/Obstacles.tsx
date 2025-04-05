@@ -26,7 +26,7 @@ export const Obstacles: React.FC<ObstaclesProps> = ({ obstacles }) => {
                     <Text
                         position={new Vector3(0, 1.8, 0)}
                         fontSize={0.3}
-                        color="white"
+                        color="#00ff05"
                         anchorX="center"
                         anchorY="middle"
                     >

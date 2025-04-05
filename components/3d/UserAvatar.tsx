@@ -32,7 +32,7 @@ export const UserAvatar: React.FC<UserAvatarProps> = ({
             <Text
                 position={new Vector3(0, 1.5, 0)}
                 fontSize={0.4}
-                color="white"
+                color="#ff00aa"
                 anchorX="center"
                 anchorY="middle"
             >
