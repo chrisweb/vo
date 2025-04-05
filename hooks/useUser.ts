@@ -57,6 +57,7 @@ export const useUser = () => {
             gridWidth: number,
             gridHeight: number
         ): Vector3 => {
+
             // TODO: maybe instead of setting a default value
             // if we can't find a cell we throw an error????
             let randomCell: GridCell = { x: 0, z: 0 }
@@ -88,6 +89,7 @@ export const useUser = () => {
             }
 
             const worldPos = gridCellToPosition(randomCell)
+
             return new Vector3(worldPos.x, worldPos.y, worldPos.z)
         },
         [occupiedCells]
@@ -120,8 +122,8 @@ export const useUser = () => {
         const cell = positionToGridCell(randomPosition)
         const cellKey = cellToString(cell)
 
-        setOccupiedCells((prev) => {
-            const newSet = new Set(prev)
+        setOccupiedCells(() => {
+            const newSet = new Set<string>()
             newSet.add(cellKey)
             return newSet
         })
