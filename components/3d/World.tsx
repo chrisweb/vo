@@ -57,8 +57,8 @@ const World: React.FC<WorldProps> = ({ username }) => {
         obstacles: OBSTACLES,
         occupiedCells,
         userPosition: {
-            x: positionState.x,
-            z: positionState.z
+            x: positionState?.x ?? 0,
+            z: positionState?.z ?? 0,
         }
     })
 
@@ -76,9 +76,10 @@ const World: React.FC<WorldProps> = ({ username }) => {
     }, [initializeUser])
 
     useEffect(() => {
-        if (pathState.length === 0 || !isMovingState) return
+        if (pathState.length === 0 || !isMovingState || !positionState) return
 
         const moveAlongPath = () => {
+
             const nextCell = pathState[0]
             const newPath = pathState.slice(1)
 
@@ -129,9 +130,9 @@ const World: React.FC<WorldProps> = ({ username }) => {
             <Obstacles obstacles={OBSTACLES} />
             {/* current user */}
             <UserAvatar
-                x={positionState.x}
-                y={positionState.y}
-                z={positionState.z}
+                x={positionState?.x ?? 0}
+                y={positionState?.y ?? 0}
+                z={positionState?.z ?? 0}
                 username={username}
                 color="#3498db"
                 isCurrentUser={true}

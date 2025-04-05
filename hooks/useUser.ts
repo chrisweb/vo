@@ -3,15 +3,10 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Vector3 } from 'three'
 import { supabaseClient } from '@/utils/supabase'
-import { REALTIME_LISTEN_TYPES, REALTIME_SUBSCRIBE_STATES, type RealtimeChannel } from '@supabase/supabase-js'
+import { REALTIME_LISTEN_TYPES, REALTIME_SUBSCRIBE_STATES, REALTIME_PRESENCE_LISTEN_EVENTS, type RealtimeChannel } from '@supabase/supabase-js'
 import { GridCell, cellToString, positionToGridCell, gridCellToPosition } from '@/helpers/grid'
 import { v4 as uuidv4 } from 'uuid'
 import { serializeVector3, deserializeVector3 } from '@/helpers/vector'
-
-export interface PresenceData {
-    id: string
-    username: string
-}
 
 export interface UserData {
     id: string
@@ -35,12 +30,21 @@ interface PayloadData {
     payload: SerializedUserData
 }
 
+interface JoinPresenceData {
+    key: string
+    newPresences: SerializedUserData[]
+}
+
+interface LeftPresenceData {
+    key: string
+    leftPresences: SerializedUserData[]
+}
+
 const newUserId = uuidv4()
 
 export const useUser = () => {
 
-    const [positionState, setPositionState] = useState<Vector3>(new Vector3(0, 0, 0))
-    const [presencesState, setPresencesState] = useState<PresenceData[]>([])
+    const [positionState, setPositionState] = useState<Vector3 | null>(null)
     const [usersState, setUsersState] = useState<UserData[]>([])
     const [userIdState, setUserIdState] = useState<string | null>(null)
     const [channelState, setChannelState] = useState<RealtimeChannel | null>(null)
@@ -111,13 +115,13 @@ export const useUser = () => {
         setPositionState(randomPosition)
         setLastBroadcastedPositionState(randomPosition)
 
-        const newUser: UserData = {
+        const userData: UserData = {
             id: newUserId,
             username,
             position: randomPosition,
         }
 
-        setUsersState(currentUsers => [...currentUsers, newUser])
+        setUsersState(currentUsers => [...currentUsers, userData])
 
         const cell = positionToGridCell(randomPosition)
         const cellKey = cellToString(cell)
@@ -154,23 +158,14 @@ export const useUser = () => {
                 setChannelState(channel)
 
                 // Track presence to keep the connection alive
-                const presenceData = {
-                    username: username,
-                    id: newUserId,
-                }
-
-                channel.track(presenceData).then(() => {
+                channel.track(userData).then(() => {
                     console.log('Presence tracked successfully')
 
-                    console.log('// Broadcast initial position to all users')
+                    console.log('+++++++++ Broadcast initial position to all users', userData)
                     channel.send({
                         type: 'broadcast',
                         event: 'position',
-                        payload: {
-                            id: newUserId,
-                            username,
-                            position: serializeVector3(randomPosition)
-                        }
+                        payload: userData
                     }).catch((error: unknown) => {
                         console.error('Failed to send initial position', error)
                     })
@@ -238,6 +233,27 @@ export const useUser = () => {
                     const cell = positionToGridCell(position)
                     const cellKey = cellToString(cell)
 
+                    if (positionState) {
+
+                        // on new presence, we share position with them
+                        const userData = {
+                            id: newUserId,
+                            username,
+                            position: serializeVector3(positionState),
+                        }
+
+                        console.log('+++++++++ broadcasting position update for new user(s)', userData)
+
+                        channel.send({
+                            type: 'broadcast',
+                            event: 'position',
+                            payload: userData
+                        }).catch((error: unknown) => {
+                            console.error('Failed to send initial position to new user', error)
+                        })
+
+                    }
+
                     setOccupiedCells((prevCells) => {
                         const newSet = new Set(prevCells)
                         newSet.add(cellKey)
@@ -254,18 +270,19 @@ export const useUser = () => {
         })
 
         // presence state changes for all users
-        channel.on(REALTIME_LISTEN_TYPES.PRESENCE, { event: 'sync' }, () => {
+        channel.on(REALTIME_LISTEN_TYPES.PRESENCE, { event: REALTIME_PRESENCE_LISTEN_EVENTS.SYNC }, () => {
             const state = channel.presenceState()
             console.log('Current presence state:', state)
         })
 
         // users joining
-        channel.on(REALTIME_LISTEN_TYPES.PRESENCE, { event: 'join' }, ({ key, newPresences }) => {
-            console.log(`User ${key} joined`, newPresences)
+        channel.on(REALTIME_LISTEN_TYPES.PRESENCE, { event: 'join' }, ({ key, newPresences }: JoinPresenceData) => {
+
+            console.log(`PRESENCE user(s) ${key} joined`, newPresences)
 
             newPresences.forEach((presence) => {
 
-                setPresencesState((prev) => {
+                setUsersState((prev) => {
 
                     const userExists = prev.some(user => user.id === presence.id)
 
@@ -273,6 +290,7 @@ export const useUser = () => {
                         return [...prev, {
                             id: String(presence.id),
                             username: String(presence.username),
+                            position: deserializeVector3(presence.position),
                         }]
                     } else {
                         return prev
@@ -280,51 +298,40 @@ export const useUser = () => {
 
                 })
 
+                setOccupiedCells((prevCells) => {
+                    const newSet = new Set(prevCells)
+                    const newCell = positionToGridCell(presence.position)
+                    const newCellKey = cellToString(newCell)
+                    newSet.add(newCellKey)
+                    return newSet
+                })
+
             })
 
-            // on new presence, we share position with them
-            if (userIdState) {
-                const currentUserData = {
-                    id: newUserId,
-                    username,
-                    position: serializeVector3(positionState),
-                }
-
-                channel.send({
-                    type: 'broadcast',
-                    event: 'position',
-                    payload: currentUserData
-                }).catch((error: unknown) => {
-                    console.error('Failed to send initial position to new user', error)
-                })
-            }
         })
 
         // users leaving
-        channel.on(REALTIME_LISTEN_TYPES.PRESENCE, { event: 'leave' }, ({ key, leftPresences }) => {
-            console.log(`User ${key} left`, leftPresences)
-            // remove user who left
-            setUsersState(prev => prev.filter(user => user.id !== key))
+        channel.on(REALTIME_LISTEN_TYPES.PRESENCE, { event: 'leave' }, ({ key, leftPresences }: LeftPresenceData) => {
+            console.log(`PRESENCE user(s)? ${key} left`, leftPresences)
 
-            setPresencesState((prev) => {
-                return prev.filter(user => user.id !== key)
-            })
+            leftPresences.forEach((presence) => {
 
-            // clean up occupied cells when a user leaves
-            setOccupiedCells((prev) => {
-                const newSet = new Set(prev)
-                const userLeaving = usersState.find(user => user.id === key)
-                if (userLeaving) {
-                    const cell = positionToGridCell(userLeaving.position)
-                    newSet.delete(cellToString(cell))
-                }
-                return newSet
+                // remove user who left
+                setUsersState(prev => prev.filter(user => user.id !== presence.id))
+
+                setOccupiedCells((prevCells) => {
+                    const newSet = new Set(prevCells)
+                    const cell = positionToGridCell(presence.position)
+                    const newCellKey = cellToString(cell)
+                    newSet.delete(newCellKey)
+                    return newSet
+                })
             })
         })
 
         return { channel: channel }
 
-    }, [getRandomCellPosition, userIdState, usersState, positionState])
+    }, [getRandomCellPosition, userIdState, positionState])
 
     const unsubscribeUser = useCallback(() => {
         if (channelState) {
@@ -358,7 +365,7 @@ export const useUser = () => {
         setPositionState(newPosition)
     }, [])
 
-    // broadcast position updates only when position changes
+    // broadcast position updates when position changes
     useEffect(() => {
         if (!channelState || !userIdState || !lastBroadcastedPositionState) return
 
@@ -368,16 +375,19 @@ export const useUser = () => {
         }
 
         const currentUser = usersState.find(user => user.id === userIdState)
-        if (!currentUser) return
+
+        if (!positionState || !currentUser) return
 
         // serialize the position for transmission
         const serializedPosition = serializeVector3(positionState)
 
         const userData = {
-            id: userIdState,
+            id: currentUser.id,
             username: currentUser.username,
             position: serializedPosition
         }
+
+        console.log('+++++++++ broadcasting position update because position changed:', userData)
 
         // broadcast position update to all users
         channelState.send({
@@ -391,6 +401,18 @@ export const useUser = () => {
 
         console.log('Broadcasting position update:', userData)
 
+        setUsersState((prev) => {
+            // update the user state with new position
+            return prev.map(user =>
+                user.id === userIdState ?
+                    {
+                        ...user,
+                        serializedPosition,
+                    } :
+                    user
+            )
+        })
+
         setLastBroadcastedPositionState(positionState)
 
     }, [channelState, userIdState, positionState, lastBroadcastedPositionState, usersState])
@@ -400,7 +422,6 @@ export const useUser = () => {
         usersState,
         userIdState,
         occupiedCells,
-        presencesState,
         initializeUser,
         unsubscribeUser,
         updateUserPosition
