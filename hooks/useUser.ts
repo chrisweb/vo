@@ -8,6 +8,10 @@ import { GridCell, cellToString, positionToGridCell, gridCellToPosition } from '
 import { v4 as uuidv4 } from 'uuid'
 import { serializeVector3, deserializeVector3 } from '@/helpers/vector'
 
+// static configuration variables for channel retry behavior
+const MAX_RETRY_ATTEMPTS = 3
+const RETRY_TIMEOUT_MS = 2000
+
 export interface UserData {
     id: string
     username: string
@@ -49,6 +53,8 @@ export const useUser = () => {
     const [userIdState, setUserIdState] = useState<string | null>(null)
     const [channelState, setChannelState] = useState<RealtimeChannel | null>(null)
     const [lastBroadcastedPositionState, setLastBroadcastedPositionState] = useState<Vector3 | null>(null)
+    const [retryAttempts, setRetryAttempts] = useState<number>(0)
+    const [retryTimeoutId, setRetryTimeoutId] = useState<NodeJS.Timeout | null>(null)
 
     // using set instead of array (as we don't want to have duplicates anyway)
     // sets are much faster for lookups than arrays
@@ -144,6 +150,13 @@ export const useUser = () => {
             }
         })
 
+        // Reset retry-related state when creating a new channel
+        setRetryAttempts(0)
+        if (retryTimeoutId) {
+            clearTimeout(retryTimeoutId)
+            setRetryTimeoutId(null)
+        }
+
         console.log('Channel created:', channel)
 
         channel.subscribe((status, error) => {
@@ -154,6 +167,13 @@ export const useUser = () => {
             if (status === REALTIME_SUBSCRIBE_STATES.SUBSCRIBED) {
 
                 console.log('Successfully subscribed to channel')
+
+                // reset retry counter on successful connection
+                setRetryAttempts(0)
+                if (retryTimeoutId) {
+                    clearTimeout(retryTimeoutId)
+                    setRetryTimeoutId(null)
+                }
 
                 setChannelState(channel)
 
@@ -177,6 +197,25 @@ export const useUser = () => {
                 setChannelState(null)
             } else if (status === REALTIME_SUBSCRIBE_STATES.CHANNEL_ERROR) {
                 console.error('Channel error occurred')
+                if (retryAttempts < MAX_RETRY_ATTEMPTS) {
+                    console.log(`Attempting to retry channel subscription in ${(RETRY_TIMEOUT_MS / 1000).toString()} seconds... (Attempt ${(retryAttempts + 1).toString()} of ${MAX_RETRY_ATTEMPTS.toString()})`)
+                    setRetryAttempts(retryAttempts + 1)
+
+                    // Clear any existing timeout
+                    if (retryTimeoutId) {
+                        clearTimeout(retryTimeoutId)
+                    }
+
+                    // Set a timeout for retry with the configured delay
+                    const timeoutId = setTimeout(() => {
+                        console.log('Executing retry for channel subscription')
+                        channel.subscribe()
+                    }, RETRY_TIMEOUT_MS)
+
+                    setRetryTimeoutId(timeoutId)
+                } else {
+                    console.error(`Maximum number of retry attempts (${MAX_RETRY_ATTEMPTS.toString()}) reached. Giving up on channel reconnection.`)
+                }
                 // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
             } else if (status === REALTIME_SUBSCRIBE_STATES.TIMED_OUT) {
                 console.error('Channel subscription timed out')
@@ -331,7 +370,7 @@ export const useUser = () => {
 
         return { channel: channel }
 
-    }, [getRandomCellPosition, userIdState, positionState])
+    }, [getRandomCellPosition, userIdState, positionState, retryAttempts, retryTimeoutId])
 
     const unsubscribeUser = useCallback(() => {
         if (channelState) {
