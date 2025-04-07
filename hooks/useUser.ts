@@ -86,7 +86,7 @@ export const useUser = () => {
                 const z = Math.floor(Math.random() * gridHeight)
                 randomCell = { x, z }
 
-                // TODO: update needed, this code should get handled by pathfinding.js
+                // TODO: update needed?, this code should get handled by pathfinding.js
                 // check if cell is occupied or has an obstacle
                 const cellKey = cellToString(randomCell)
                 const isObstacle = obstacles.some(obs =>
@@ -138,7 +138,9 @@ export const useUser = () => {
             return newSet
         })
 
-        // create a channel with a specific room ID to ensure all users connect to the same space
+        // create a channel with a specific room ID
+        // TODO: in the future this ID would come from a db query and
+        // would be unique for each virtual world
         const channel = supabaseClient.channel('virtual-world', {
             config: {
                 presence: {
@@ -150,7 +152,7 @@ export const useUser = () => {
             }
         })
 
-        // Reset retry-related state when creating a new channel
+        // retry attempts reset
         setRetryAttempts(0)
         if (retryTimeoutId) {
             clearTimeout(retryTimeoutId)
@@ -177,7 +179,6 @@ export const useUser = () => {
 
                 setChannelState(channel)
 
-                // Track presence to keep the connection alive
                 channel.track(userData).then(() => {
                     console.log('Presence tracked successfully')
 
@@ -192,21 +193,26 @@ export const useUser = () => {
                 }).catch((error: unknown) => {
                     console.error('Failed to track presence', error)
                 })
+
             } else if (status === REALTIME_SUBSCRIBE_STATES.CLOSED) {
+
                 console.log('Channel closed unexpectedly')
                 setChannelState(null)
+
             } else if (status === REALTIME_SUBSCRIBE_STATES.CHANNEL_ERROR) {
+
                 console.error('Channel error occurred')
+
                 if (retryAttempts < MAX_RETRY_ATTEMPTS) {
+
                     console.log(`Attempting to retry channel subscription in ${(RETRY_TIMEOUT_MS / 1000).toString()} seconds... (Attempt ${(retryAttempts + 1).toString()} of ${MAX_RETRY_ATTEMPTS.toString()})`)
+
                     setRetryAttempts(retryAttempts + 1)
 
-                    // Clear any existing timeout
                     if (retryTimeoutId) {
                         clearTimeout(retryTimeoutId)
                     }
 
-                    // Set a timeout for retry with the configured delay
                     const timeoutId = setTimeout(() => {
                         console.log('Executing retry for channel subscription')
                         channel.subscribe()
@@ -216,13 +222,14 @@ export const useUser = () => {
                 } else {
                     console.error(`Maximum number of retry attempts (${MAX_RETRY_ATTEMPTS.toString()}) reached. Giving up on channel reconnection.`)
                 }
+
                 // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
             } else if (status === REALTIME_SUBSCRIBE_STATES.TIMED_OUT) {
                 console.error('Channel subscription timed out')
             }
         })
 
-        // @ts-ignore types problem
+        // @ts-ignore TODO: types problem
         channel.on(REALTIME_LISTEN_TYPES.BROADCAST, { event: 'position' }, (payload: PayloadData) => {
 
             console.log('####### Received position update:', payload)
@@ -236,7 +243,7 @@ export const useUser = () => {
                 )
 
                 if (userExists) {
-                    // find the user's previous position before updating
+                    // existing user, update their state
                     const previousUser = prev.find(user => user.id === payload.payload.id)
 
                     if (previousUser) {
@@ -257,7 +264,7 @@ export const useUser = () => {
                         })
                     }
 
-                    // Update the user state with new position
+                    // update the user state with new position
                     return prev.map(user =>
                         user.id === payload.payload.id ?
                             {
@@ -267,8 +274,7 @@ export const useUser = () => {
                             user
                     )
                 } else {
-                    // new user joining, add them to the list
-                    // For new users, just add their position to occupied cells
+                    // new user joined, add them to the state
                     const cell = positionToGridCell(position)
                     const cellKey = cellToString(cell)
 
@@ -404,7 +410,7 @@ export const useUser = () => {
         setPositionState(newPosition)
     }, [])
 
-    // broadcast position updates when position changes
+    // broadcast update when position changes
     useEffect(() => {
         if (!channelState || !userIdState || !lastBroadcastedPositionState) return
 
