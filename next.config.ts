@@ -13,17 +13,6 @@ const nextConfigOptions: NextConfig = {
     reactStrictMode: true,
     poweredByHeader: false,
     experimental: {
-        turbo: {
-            resolveExtensions: [
-                '.mdx',
-                '.tsx',
-                '.ts',
-                '.jsx',
-                '.js',
-                '.mjs',
-                '.json',
-            ],
-        },
         // React compiler
         reactCompiler: true,
         // experimental partial prerendering
