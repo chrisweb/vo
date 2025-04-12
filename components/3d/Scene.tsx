@@ -41,7 +41,8 @@ const Scene: React.FC<IProps> = (props) => {
 
     const glProps: GLProps = {
         powerPreference: 'high-performance',
-        depth: false,
+        depth: true,
+        antialias: true,
     }
 
     if (!hasJoined) {
@@ -96,17 +97,14 @@ const Scene: React.FC<IProps> = (props) => {
             >
                 <Suspense fallback={null}>
                     <AdaptiveDpr pixelated />
-
                     <PerspectiveCamera
                         makeDefault
                         fov={75}
-                        near={0.01}
-                        far={50}
+                        near={0.1}
+                        far={100}
                         position={[0, 5, 10]}
                     />
-
                     <color attach="background" args={['#2f0f30']} />
-
                     <ambientLight color="#ecd7e2" intensity={1.5} />
                     <spotLight
                         position={[10, 10, 10]}
@@ -115,7 +113,6 @@ const Scene: React.FC<IProps> = (props) => {
                         intensity={1}
                         castShadow={false}
                     />
-
                     <World username={username} />
                 </Suspense>
             </Canvas>
