@@ -4,13 +4,14 @@ import { useCallback, useEffect, useState, useMemo } from 'react'
 import { Vector3 } from 'three'
 import PF from 'pathfinding'
 import { GridCell, GridPath, positionToGridCell, stringToCell } from '@/helpers/grid'
+import { type Obstacle } from '@/components/3d/Obstacles'
 
-interface PathfindingHelperProps {
+interface PathfindingHookProps {
     // cells in the x direction (0 to gridWidth-1)
     gridWidth: number
     // cells in the z direction (0 to gridHeight-1)
     gridHeight: number
-    obstacles: GridCell[]
+    obstacles: Obstacle[]
     occupiedCells: Set<string>
     userPosition: {
         x: number
@@ -24,7 +25,7 @@ export const usePathfinding = ({
     obstacles,
     occupiedCells,
     userPosition,
-}: PathfindingHelperProps) => {
+}: PathfindingHookProps) => {
 
     const [gridState, setGridState] = useState<PF.Grid | null>(null)
     const [finderState, setFinderState] = useState<PF.AStarFinder | null>(null)
@@ -49,11 +50,11 @@ export const usePathfinding = ({
         // mark obstacles as unwalkable
         obstacles.forEach((obstacle) => {
             // prevent accessing out-of-bounds cells
-            if (obstacle.x >= 0 && obstacle.x < gridWidth &&
-                obstacle.z >= 0 && obstacle.z < gridHeight) {
-                grid.setWalkableAt(obstacle.x, obstacle.z, false)
+            if (obstacle.gridCell.x >= 0 && obstacle.gridCell.x < gridWidth &&
+                obstacle.gridCell.z >= 0 && obstacle.gridCell.z < gridHeight) {
+                grid.setWalkableAt(obstacle.gridCell.x, obstacle.gridCell.z, false)
             } else {
-                console.warn(`Obstacle out of bounds: (${obstacle.x.toString()}, ${obstacle.z.toString()})`)
+                console.warn(`Obstacle out of bounds: (${obstacle.gridCell.x.toString()}, ${obstacle.gridCell.z.toString()})`)
             }
         })
 

@@ -7,6 +7,7 @@ import { REALTIME_LISTEN_TYPES, REALTIME_SUBSCRIBE_STATES, REALTIME_PRESENCE_LIS
 import { GridCell, cellToString, positionToGridCell, gridCellToPosition } from '@/helpers/grid'
 import { v4 as uuidv4 } from 'uuid'
 import { serializeVector3, deserializeVector3 } from '@/helpers/vector'
+import { type Obstacle } from '@/components/3d/Obstacles'
 
 // static configuration variables for channel retry behavior
 const MAX_RETRY_ATTEMPTS = 3
@@ -63,7 +64,7 @@ export const useUser = () => {
     const getRandomCellPosition = useCallback(
         (
             existingUsers: UserData[],
-            obstacles: GridCell[],
+            obstacles: Obstacle[],
             gridWidth: number,
             gridHeight: number
         ): Vector3 => {
@@ -89,8 +90,8 @@ export const useUser = () => {
                 // TODO: update needed?, this code should get handled by pathfinding.js
                 // check if cell is occupied or has an obstacle
                 const cellKey = cellToString(randomCell)
-                const isObstacle = obstacles.some(obs =>
-                    obs.x === randomCell.x && obs.z === randomCell.z
+                const isObstacle = obstacles.some(obstacle =>
+                    obstacle.gridCell.x === randomCell.x && obstacle.gridCell.z === randomCell.z
                 )
 
                 if (!occupied.has(cellKey) && !isObstacle) {
@@ -107,7 +108,7 @@ export const useUser = () => {
 
     const initializeUser = useCallback((
         username: string,
-        obstacles: GridCell[],
+        obstacles: Obstacle[],
         gridWidth: number,
         gridHeight: number
     ) => {

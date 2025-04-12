@@ -1,6 +1,7 @@
 import { useThree } from '@react-three/fiber'
 import { useEffect } from 'react'
 import { GridCell, GridPath } from '@/helpers/grid'
+import { type Obstacle } from './Obstacles'
 
 // Static name for clickable grid cells
 const CLICKABLE_CELL_NAME = 'clickable-grid-cell'
@@ -10,7 +11,7 @@ interface GridProps {
     height: number
     onCellClick: (x: number, z: number) => void
     occupiedCells: Set<string>
-    obstacles: GridCell[]
+    obstacles: Obstacle[]
     targetCell: GridCell | null
     path: GridPath
 }
@@ -65,7 +66,7 @@ interface GridCellsProps {
     width: number
     height: number
     occupiedCells: Set<string>
-    obstacles: GridCell[]
+    obstacles: Obstacle[]
     targetCell: GridCell | null
     path: GridPath
 }
@@ -88,7 +89,7 @@ const GridCells: React.FC<GridCellsProps> = ({
 
                 // cell states
                 const isOccupied = occupiedCells.has(cellKey)
-                const isObstacle = obstacles.some(obs => obs.x === x && obs.z === z)
+                const isObstacle = obstacles.some(obstacle => obstacle.gridCell.x === x && obstacle.gridCell.z === z)
                 const isTarget = targetCell && targetCell.x === x && targetCell.z === z
                 const isPathCell = path.some(cell => cell.x === x && cell.z === z)
 

@@ -4,11 +4,11 @@ import { useEffect, useRef } from 'react'
 import { OrbitControls } from '@react-three/drei'
 import { Vector3 } from 'three'
 import { Grid } from './Grid'
-import { Obstacles } from './Obstacles'
+import { Obstacles, type Obstacle } from './Obstacles'
 import { UserAvatar } from './UserAvatar'
 import { useUser } from '@/hooks/useUser'
 import { usePathfinding } from '@/hooks/usePathfinding'
-import { GridCell, positionToGridCell, gridCellToPosition } from '@/helpers/grid'
+import { positionToGridCell, gridCellToPosition } from '@/helpers/grid'
 
 interface WorldProps {
     username: string
@@ -20,13 +20,16 @@ const GRID_HEIGHT = 20
 
 // put some fake obstacles in the grid
 // start is 0,0 and end is 19,19 (0-based coordinates)
-const OBSTACLES: GridCell[] = [
-    { x: 19, z: 13 },
-    { x: 15, z: 5 },
-    { x: 7, z: 15 },
-    { x: 3, z: 7 },
-    { x: 0, z: 18 },
-]
+const OBSTACLES: Obstacle[] = [{
+    gridCell: { x: 2, z: 13 },
+    model: 'Desk',
+    orientation: 0,
+},
+{
+    gridCell: { x: 3, z: 5 },
+    model: 'Desk',
+    orientation: 0,
+}]
 
 const World: React.FC<WorldProps> = ({ username }) => {
 
