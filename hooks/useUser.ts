@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useState, useRef } from 'react'
+import { useCallback, useEffect, useState/*, useRef*/ } from 'react'
 import { Vector3 } from 'three'
 import { supabaseClient } from '@/utils/supabase'
 import { REALTIME_LISTEN_TYPES, REALTIME_SUBSCRIBE_STATES, REALTIME_PRESENCE_LISTEN_EVENTS, type RealtimeChannel } from '@supabase/supabase-js'
@@ -10,8 +10,8 @@ import { serializeVector3, deserializeVector3 } from '@/helpers/vector'
 import { type Obstacle } from '@/components/3d/Obstacles'
 
 // static configuration variables for channel retry behavior
-const MAX_RETRY_ATTEMPTS = 3
-const RETRY_TIMEOUT_MS = 2000
+//const MAX_RETRY_ATTEMPTS = 3
+//const RETRY_TIMEOUT_MS = 2000
 
 export interface UserData {
     id: string
@@ -47,15 +47,16 @@ interface LeftPresenceData {
 
 const newUserId = uuidv4()
 
-export const useUser = () => {    const [positionState, setPositionState] = useState<Vector3 | null>(null)
+export const useUser = () => {
+    const [positionState, setPositionState] = useState<Vector3 | null>(null)
     const [usersState, setUsersState] = useState<UserData[]>([])
     const [userIdState, setUserIdState] = useState<string | null>(null)
     const [channelState, setChannelState] = useState<RealtimeChannel | null>(null)
     const [lastBroadcastedPositionState, setLastBroadcastedPositionState] = useState<Vector3 | null>(null)
-    
+
     // use refs for tracking retry attempts and timeout IDs
-    const retryAttemptsRef = useRef<number>(0)
-    const retryTimeoutIdRef = useRef<NodeJS.Timeout | null>(null)
+    //const retryAttemptsRef = useRef<number>(0)
+    //const retryTimeoutIdRef = useRef<NodeJS.Timeout | null>(null)
 
     // using set instead of array (as we don't want to have duplicates anyway)
     // sets are much faster for lookups than arrays
@@ -151,12 +152,14 @@ export const useUser = () => {    const [positionState, setPositionState] = useS
                     self: false
                 }
             }
-        })        // retry attempts reset
-        retryAttemptsRef.current = 0
+        })
+
+        // retry attempts reset
+        /*retryAttemptsRef.current = 0
         if (retryTimeoutIdRef.current) {
             clearTimeout(retryTimeoutIdRef.current)
             retryTimeoutIdRef.current = null
-        }
+        }*/
 
         console.log('Channel created:', channel)
 
@@ -165,14 +168,15 @@ export const useUser = () => {    const [positionState, setPositionState] = useS
             console.log('Channel subscription status update:', status)
             console.log('error:', error)
 
-            if (status === REALTIME_SUBSCRIBE_STATES.SUBSCRIBED) {                console.log('Successfully subscribed to channel')
+            if (status === REALTIME_SUBSCRIBE_STATES.SUBSCRIBED) {
+                console.log('Successfully subscribed to channel')
 
                 // reset retry counter on successful connection
-                retryAttemptsRef.current = 0
+                /*retryAttemptsRef.current = 0
                 if (retryTimeoutIdRef.current) {
                     clearTimeout(retryTimeoutIdRef.current)
                     retryTimeoutIdRef.current = null
-                }
+                }*/
 
                 setChannelState(channel)
 
@@ -196,9 +200,10 @@ export const useUser = () => {    const [positionState, setPositionState] = useS
                 console.log('Channel closed unexpectedly')
                 setChannelState(null)
 
-            } else if (status === REALTIME_SUBSCRIBE_STATES.CHANNEL_ERROR) {                console.error('Channel error occurred')
+            } else if (status === REALTIME_SUBSCRIBE_STATES.CHANNEL_ERROR) {
+                console.error('Channel error occurred')
 
-                if (retryAttemptsRef.current < MAX_RETRY_ATTEMPTS) {
+                /*if (retryAttemptsRef.current < MAX_RETRY_ATTEMPTS) {
 
                     console.log(`Attempting to retry channel subscription in ${(RETRY_TIMEOUT_MS / 1000).toString()} seconds... (Attempt ${(retryAttemptsRef.current + 1).toString()} of ${MAX_RETRY_ATTEMPTS.toString()})`)
 
@@ -214,12 +219,16 @@ export const useUser = () => {    const [positionState, setPositionState] = useS
                     }, RETRY_TIMEOUT_MS)
                 } else {
                     console.error(`Maximum number of retry attempts (${MAX_RETRY_ATTEMPTS.toString()}) reached. Giving up on channel reconnection.`)
-                }
+                }*/
+
+                setChannelState(null)
 
                 // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
             } else if (status === REALTIME_SUBSCRIBE_STATES.TIMED_OUT) {
                 console.error('Channel subscription timed out')
             }
+
+            return
         })
 
         // @ts-ignore TODO: types problem
@@ -369,7 +378,7 @@ export const useUser = () => {    const [positionState, setPositionState] = useS
 
         return { channel: channel }
 
-    }, [getRandomCellPosition, userIdState, positionState, retryAttempts, retryTimeoutId])
+    }, [getRandomCellPosition, userIdState, positionState])
 
     const unsubscribeUser = useCallback(() => {
         if (channelState) {
