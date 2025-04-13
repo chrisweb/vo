@@ -23,12 +23,14 @@ const GRID_HEIGHT = 20
 const OBSTACLES: Obstacle[] = [{
     gridCell: { x: 2, z: 13 },
     model: 'Desk',
-    orientation: 0,
+    orientation: 180,
+    positionModifier: { x: 0.4, y: 0, z: 0.2 },
 },
 {
     gridCell: { x: 3, z: 5 },
     model: 'Desk',
     orientation: 0,
+    positionModifier: { x: 0.6, y: 0, z: 0.8 },
 }]
 
 const World: React.FC<WorldProps> = ({ username }) => {

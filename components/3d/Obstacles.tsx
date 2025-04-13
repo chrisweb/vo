@@ -10,6 +10,11 @@ export interface Obstacle {
     gridCell: GridCell
     model: string
     orientation: number
+    positionModifier?: {
+        x: number
+        y: number
+        z: number
+    }
 }
 
 export interface ObstaclesProps {
@@ -29,9 +34,14 @@ export const Obstacles: React.FC<ObstaclesProps> = ({ obstacles }) => {
                         return (
                             <Suspense key={uniqueKey} fallback={null}>
                                 <DeskModel
-                                    position={[obstacle.gridCell.x, 0, obstacle.gridCell.z]}
-                                    rotation={[0, obstacle.orientation * Math.PI / 2, 0]}
-                                    scale={1}
+                                    position={[
+                                        obstacle.gridCell.x + (obstacle.positionModifier?.x ?? 0),
+                                        obstacle.positionModifier?.y ?? 0,
+                                        obstacle.gridCell.z + (obstacle.positionModifier?.z ?? 0)
+                                    ]}
+                                    rotation={[0, obstacle.orientation * Math.PI / 180, 0]}
+                                    scale={0.5}
+                                    castShadow
                                 />
                             </Suspense>
                         )
