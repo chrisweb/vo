@@ -479,7 +479,7 @@ export const useUser = () => {
                 user.id === userIdState ?
                     {
                         ...user,
-                        serializedPosition,
+                        position: positionState,
                     } :
                     user
             )
