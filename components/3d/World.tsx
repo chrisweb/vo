@@ -1,8 +1,9 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
-import { OrbitControls } from '@react-three/drei'
+import { OrbitControls, PerspectiveCamera } from '@react-three/drei'
 import { Vector3 } from 'three'
+import * as THREE from 'three'
 import { Grid } from './Grid'
 import { Obstacles, type Obstacle } from './Obstacles'
 import { UserAvatar } from './UserAvatar'
@@ -21,7 +22,7 @@ const GRID_HEIGHT = 20
 // put some fake obstacles in the grid
 // start is 0,0 and end is 19,19 (0-based coordinates)
 const OBSTACLES: Obstacle[] = [{
-    gridCell: { x: 2, z: 13 },
+    gridCell: { x: 10, z: 17 },
     model: 'Desk',
     orientation: 180,
     positionModifier: { x: 0.4, y: 0, z: 0.2 },
@@ -35,7 +36,11 @@ const OBSTACLES: Obstacle[] = [{
 
 const World: React.FC<WorldProps> = ({ username }) => {
 
-    const controlsRef = useRef(null)
+    const cameraRef = useRef<THREE.PerspectiveCamera>(null)
+
+    // grid center coordinates
+    const gridCenterX = GRID_WIDTH / 2 - 0.5
+    const gridCenterZ = GRID_HEIGHT / 2 - 0.5
 
     // user
     const {
@@ -123,6 +128,15 @@ const World: React.FC<WorldProps> = ({ username }) => {
 
     return (
         <>
+            <PerspectiveCamera
+                ref={cameraRef}
+                makeDefault
+                position={[8.4, 4, 24.1]}
+                fov={50}
+                near={0.1}
+                far={50}
+                rotation={[0, 0, 0]}
+            />
             <Grid
                 width={GRID_WIDTH}
                 height={GRID_HEIGHT}
@@ -139,7 +153,7 @@ const World: React.FC<WorldProps> = ({ username }) => {
                 y={positionState?.y ?? 0}
                 z={positionState?.z ?? 0}
                 username={username}
-                color="#3498db"
+                color={usersState.find(user => user.id === userIdState)?.color ?? '#3498db'}
                 isCurrentUser={true}
             />
             {/* other users */}
@@ -152,16 +166,12 @@ const World: React.FC<WorldProps> = ({ username }) => {
                         y={user.position.y}
                         z={user.position.z}
                         username={user.username}
-                        color="#e74c3c"
+                        color={user.color}
                         isCurrentUser={false}
                     />
                 ))}
             <OrbitControls
-                ref={controlsRef}
-                target={[GRID_WIDTH / 2 - 0.5, 0, GRID_HEIGHT / 2 - 0.5]}
-                minDistance={3}
-                maxDistance={20}
-                maxPolarAngle={Math.PI / 2 - 0.1}
+                target={[gridCenterX, 0, gridCenterZ]}
             />
         </>
     )

@@ -13,10 +13,26 @@ import { type Obstacle } from '@/components/3d/Obstacles'
 //const MAX_RETRY_ATTEMPTS = 3
 //const RETRY_TIMEOUT_MS = 2000
 
+
+// colors for user avatars
+export const USER_COLORS = [
+    '#3498db', // Blue
+    '#e74c3c', // Red
+    '#2ecc71', // Green
+    '#f39c12', // Orange
+    '#9b59b6', // Purple
+    '#1abc9c', // Teal
+    '#f1c40f', // Yellow
+    '#e67e22', // Dark Orange
+    '#34495e', // Navy Blue
+    '#16a085', // Dark Cyan
+]
+
 export interface UserData {
     id: string
     username: string
     position: Vector3
+    color: string
 }
 
 interface SerializedUserData {
@@ -27,6 +43,7 @@ interface SerializedUserData {
         y: number
         z: number
     }
+    color: string
 }
 
 interface PayloadData {
@@ -49,6 +66,7 @@ const newUserId = uuidv4()
 
 export const useUser = () => {
     const [positionState, setPositionState] = useState<Vector3 | null>(null)
+    const [colorState, setColorState] = useState<string | null>(null)
     const [usersState, setUsersState] = useState<UserData[]>([])
     const [userIdState, setUserIdState] = useState<string | null>(null)
     const [channelState, setChannelState] = useState<RealtimeChannel | null>(null)
@@ -106,7 +124,6 @@ export const useUser = () => {
         },
         [occupiedCells]
     )
-
     const initializeUser = useCallback((
         username: string,
         obstacles: Obstacle[],
@@ -123,10 +140,15 @@ export const useUser = () => {
         setPositionState(randomPosition)
         setLastBroadcastedPositionState(randomPosition)
 
+        const randomColor = USER_COLORS[Math.floor(Math.random() * USER_COLORS.length)]
+
+        setColorState(randomColor)
+
         const userData: UserData = {
             id: newUserId,
             username,
             position: randomPosition,
+            color: randomColor
         }
 
         setUsersState(currentUsers => [...currentUsers, userData])
@@ -280,13 +302,14 @@ export const useUser = () => {
                     const cell = positionToGridCell(position)
                     const cellKey = cellToString(cell)
 
-                    if (positionState) {
+                    if (positionState && colorState) {
 
                         // on new presence, we share position with them
                         const userData = {
                             id: newUserId,
                             username,
                             position: serializeVector3(positionState),
+                            color: colorState
                         }
 
                         console.log('+++++++++ broadcasting position update for new user(s)', userData)
@@ -306,11 +329,11 @@ export const useUser = () => {
                         newSet.add(cellKey)
                         return newSet
                     })
-
                     return [...prev, {
                         id: payload.payload.id,
                         username: payload.payload.username,
-                        position
+                        position,
+                        color: payload.payload.color
                     }]
                 }
             })
@@ -338,6 +361,7 @@ export const useUser = () => {
                             id: String(presence.id),
                             username: String(presence.username),
                             position: deserializeVector3(presence.position),
+                            color: presence.color || USER_COLORS[Math.floor(Math.random() * USER_COLORS.length)]
                         }]
                     } else {
                         return prev
@@ -378,7 +402,7 @@ export const useUser = () => {
 
         return { channel: channel }
 
-    }, [getRandomCellPosition, userIdState, positionState])
+    }, [getRandomCellPosition, userIdState, positionState, colorState])
 
     const unsubscribeUser = useCallback(() => {
         if (channelState) {
@@ -431,7 +455,8 @@ export const useUser = () => {
         const userData = {
             id: currentUser.id,
             username: currentUser.username,
-            position: serializedPosition
+            position: serializedPosition,
+            color: currentUser.color
         }
 
         console.log('+++++++++ broadcasting position update because position changed:', userData)

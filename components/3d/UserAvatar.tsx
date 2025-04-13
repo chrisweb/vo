@@ -1,6 +1,6 @@
 'use client'
 
-import { Text } from '@react-three/drei'
+import { Cylinder, Text } from '@react-three/drei'
 import { Vector3 } from 'three'
 
 interface UserAvatarProps {
@@ -20,17 +20,18 @@ export const UserAvatar: React.FC<UserAvatarProps> = ({
     color,
     isCurrentUser
 }) => {
-
     const position = new Vector3(x, y, z)
-
     return (
         <group position={position}>
-            <mesh>
-                <boxGeometry args={[0.8, 1, 0.8]} />
+            <Cylinder
+                args={[0.2, 0.2, 1.2, 16]}
+                position={[0, 0, 0]}
+                castShadow
+            >
                 <meshStandardMaterial color={color} />
-            </mesh>
+            </Cylinder>
             <Text
-                position={new Vector3(0, 1.5, 0)}
+                position={new Vector3(0, 1.1, 0)}
                 fontSize={0.4}
                 color="#ff00aa"
                 anchorX="center"

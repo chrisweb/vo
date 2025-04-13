@@ -105,13 +105,19 @@ const Scene: React.FC<IProps> = (props) => {
                         position={[0, 5, 10]}
                     />
                     <color attach="background" args={['#2f0f30']} />
-                    <ambientLight color="#ecd7e2" intensity={1.5} />
-                    <spotLight
-                        position={[10, 10, 10]}
-                        angle={0.15}
-                        penumbra={1}
-                        intensity={1}
-                        castShadow={false}
+                    {/* ambient light provides soft fill light */}
+                    <ambientLight color="#dcd0b9" intensity={1.5} />
+                    {/* directional light simulates sunlight */}
+                    <directionalLight
+                        position={[15, 12, 8]}
+                        intensity={2.5}
+                        color="#dcd0b9"
+                        castShadow
+                        shadow-mapSize={[2048, 2048]}
+                        shadow-camera-left={-20}
+                        shadow-camera-right={20}
+                        shadow-camera-top={20}
+                        shadow-camera-bottom={-20}
                     />
                     <World username={username} />
                 </Suspense>

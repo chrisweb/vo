@@ -2,6 +2,7 @@ import { useThree } from '@react-three/fiber'
 import { useEffect } from 'react'
 import { GridCell, GridPath } from '@/helpers/grid'
 import { type Obstacle } from './Obstacles'
+import { useTexture } from '@react-three/drei'
 
 // Static name for clickable grid cells
 const CLICKABLE_CELL_NAME = 'clickable-grid-cell'
@@ -28,9 +29,7 @@ export const Grid: React.FC<GridProps> = ({
     return (
         <>
             {/* grid click handler */}
-            <ClickableGrid onCellClick={onCellClick} />
-
-            {/* custom grid with cell lines */}
+            <ClickableGrid onCellClick={onCellClick} />            {/* custom grid with cell lines */}
             <group position={[width / 2, 0, height / 2]}>
                 <gridHelper
                     args={[width, width, '#444', '#222']}
@@ -79,6 +78,13 @@ const GridCells: React.FC<GridCellsProps> = ({
     targetCell,
     path
 }) => {
+    // Load textures for different cell types
+    const {
+        defaultTexture,
+    } = useTexture({
+        defaultTexture: '/assets/images/floor.png',
+    })
+
     return (
         <>
             {Array.from({ length: width * height }).map((_, index) => {
@@ -93,12 +99,22 @@ const GridCells: React.FC<GridCellsProps> = ({
                 const isTarget = targetCell && targetCell.x === x && targetCell.z === z
                 const isPathCell = path.some(cell => cell.x === x && cell.z === z)
 
-                // cell color based on state
-                let cellColor = '#b8b8b8' // default floor color
-                if (isTarget) cellColor = '#2563eb'
-                else if (isPathCell) cellColor = '#6280b2'
-                else if (isObstacle) cellColor = '#7c2d12'
-                else if (isOccupied) cellColor = '#1a365d'
+                let cellColor = '#b8b8b8'
+
+                switch (true) {
+                    case isTarget:
+                        cellColor = '#2563eb'
+                        break
+                    case isPathCell:
+                        cellColor = '#6280b2'
+                        break
+                    case isObstacle:
+                        cellColor = '#7c2d12'
+                        break
+                    case isOccupied:
+                        cellColor = '#1a365d'
+                        break
+                }
 
                 // position each cell at integer + 0.5 to center it within the grid unit
                 return (
@@ -108,9 +124,12 @@ const GridCells: React.FC<GridCellsProps> = ({
                         rotation={[-Math.PI / 2, 0, 0]}
                         name={CLICKABLE_CELL_NAME}
                     >
-                        <planeGeometry args={[0.95, 0.95]} />
+                        <planeGeometry args={[0.99, 0.99]} />
                         <meshBasicMaterial
                             color={cellColor}
+                            transparent={true}
+                            opacity={0.5}
+                            map={defaultTexture}
                         />
                     </mesh>
                 )
