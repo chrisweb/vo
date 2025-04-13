@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useState } from 'react'
 import { Canvas, type GLProps } from '@react-three/fiber'
-import { AdaptiveDpr, PerspectiveCamera } from '@react-three/drei'
+import { AdaptiveDpr, PerspectiveCamera, Environment } from '@react-three/drei'
 import World from '@/components/3d/World'
 
 interface IProps extends React.PropsWithChildren {
@@ -104,7 +104,6 @@ const Scene: React.FC<IProps> = (props) => {
                         far={100}
                         position={[0, 5, 10]}
                     />
-                    <color attach="background" args={['#2f0f30']} />
                     {/* ambient light provides soft fill light */}
                     <ambientLight color="#dcd0b9" intensity={1.5} />
                     {/* directional light simulates sunlight */}
@@ -120,6 +119,10 @@ const Scene: React.FC<IProps> = (props) => {
                         shadow-camera-bottom={-20}
                     />
                     <World username={username} />
+                    <Environment
+                        preset="night"
+                        background={true}
+                    />
                 </Suspense>
             </Canvas>
         </>
